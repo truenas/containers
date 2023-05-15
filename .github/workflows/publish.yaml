@@ -50,6 +50,7 @@ jobs:
           EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
           | jq --arg version "$VERSION" '.tags | index($version) != null')
 
+          # If "production" version exists...
           if [[ $EXISTS == "true" ]]; then
             # Set this output so we can trigger "failed" status
             # on another step, to remind us to bump the version
