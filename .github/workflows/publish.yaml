@@ -43,7 +43,7 @@ jobs:
 
           if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
             RESULT="true"
-          elif
+          else
             # Get the token
             TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
