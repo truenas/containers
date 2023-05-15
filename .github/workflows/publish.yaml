@@ -39,12 +39,14 @@ jobs:
           # Check if the "production" version already exists in dokerhub
           TAGS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list")
 
+          # If we failed to get the tags, fail fast
           if echo "$TAGS" | grep -q "errors"; then
             echo "Failed to get tags from dockerhub"
             echo "$TAGS"
             exit 1
           fi
 
+          # Check if the version already exists
           EXISTS=$(echo "$TAGS" | jq --arg version "$VERSION" '.tags | index($version) != null')
 
           # If the version already exists, fail fast
