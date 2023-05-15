@@ -44,13 +44,11 @@ jobs:
           fi
 
           # Get the token
-          TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
+          TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ixsystems/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
           # Check if the "production" version already exists
-          EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
-          | jq --arg version "$VERSION" '.tags | index($version) != null')
-
-          # TODO: Check if Production version exists on DockerHub
+          EXISTS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list" \
+            | jq --arg version "$VERSION" '.tags | index($version) != null')
 
           # If "production" version exists...
           if [[ $EXISTS == "true" ]]; then
@@ -73,14 +71,6 @@ jobs:
           # Set the output
           echo "APP_VERSION=$OUTPUT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Login to Github Container registry
-        if: steps.prepare.outputs.APP_VERSION != ''
-        uses: docker/login-action@40891eba8c2bcd1309b07ba8b11232f313e86779
-        with:
-          registry: ghcr.io
-          username: truenas
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
@@ -93,9 +83,7 @@ jobs:
         with:
           context: apps/${{ matrix.containers.app }}/
           push: true
-          # We can push to multiple registries
           tags: |
-            ghcr.io/truenas/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
             ixsystems/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
 
       - name: Set failed status if version exists
