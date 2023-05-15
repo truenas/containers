@@ -1,5 +1,5 @@
 FROM alpine:latest
-LABEL maintainer="iX Systems <dev@ixsystems.com>"
+LABEL maintainer="iXsystems <dev@ixsystems.com>"
 LABEL description="tftpd-hpa server on alpine linux"
 
 # set UID/GID for tftp
