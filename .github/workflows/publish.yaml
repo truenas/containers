@@ -31,10 +31,13 @@ jobs:
         shell: bash
         run: |
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
+
+          # Initialize the output
           OUT_VERSION="$VERSION"
 
+          # If this is a pull request, append the PR number
           if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
-            $OUT_VERSION="$VERSION-pr${{ github.event.number }}"
+            OUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
           # Get the token
