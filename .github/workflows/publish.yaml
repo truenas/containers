@@ -37,7 +37,7 @@ jobs:
           TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ixsystems/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
           # Check if the "production" version already exists in dokerhub
-          TAGS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list"
+          TAGS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list")
 
           if echo "$TAGS" | grep -q "errors"; then
             echo "Failed to get tags from dockerhub"
