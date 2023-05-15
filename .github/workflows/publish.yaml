@@ -30,6 +30,7 @@ jobs:
         id: prepare
         shell: bash
         run: |
+          # Grab the version from the VERSION file
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
           # Initialize the output
