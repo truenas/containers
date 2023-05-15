@@ -41,12 +41,16 @@ jobs:
             OUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
-          # Get the token
-          TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
+          if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
+            RESULT="true"
+          elif
+            # Get the token
+            TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
-          # Check if the version already exists
-          RESULT=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
+            # Check if the version already exists
+            RESULT=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
             | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
+          fi
 
           # If the version already exists, skip the build
           if [[ $RESULT == "true" ]]; then
