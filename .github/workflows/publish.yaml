@@ -37,11 +37,11 @@ jobs:
           OUT_VERSION="$VERSION"
 
           # If this is a pull request, append the PR number
-          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+          if [[ ${{ github.event_name }} == "pull_request" ]]; then
             OUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
-          if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
+          if [[ ${{ github.event_name }} == "pull_request" ]]; then
             RESULT="true"
           else
             # Get the token
