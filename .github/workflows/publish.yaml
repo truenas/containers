@@ -1,0 +1,70 @@
+name: Publish Docker image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - apps/**
+  pull_request:
+    paths:
+      - apps/**
+
+jobs:
+  build:
+    permissions:
+      packages: write
+      contents: read
+    name: Build
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        containers:
+          - app: tftp-hpa
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+
+      - name: Prepare
+        id: prepare
+        shell: bash
+        run: |
+          VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
+          OUT_VERSION="$VERSION"
+
+          if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
+            $OUT_VERSION="$VERSION-pr${{ github.event.number }}"
+          fi
+
+          # Get the token
+          TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
+
+          # Check if the version already exists
+          RESULT=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
+            | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
+
+          # If the version already exists, skip the build
+          if [[ $RESULT == "true" ]]; then
+            echo "Version $OUT_VERSION already exists, skipping build"
+            exit 1
+          fi
+
+          # Set the output
+          echo "APP_VERSION=$OUT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Log in to the Container registry
+        if: steps.prepare.outputs.APP_VERSION != ''
+        uses: docker/login-action@40891eba8c2bcd1309b07ba8b11232f313e86779
+        with:
+          registry: ghcr.io
+          username: truenas
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        if: steps.prepare.outputs.APP_VERSION != ''
+        uses: docker/build-push-action@91df6b874e498451163feb47610c87c4a218c1ee
+        with:
+          context: apps/${{ matrix.containers.app }}/
+          push: true
+          tags: ghcr.io/truenas/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
