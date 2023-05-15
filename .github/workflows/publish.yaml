@@ -41,15 +41,21 @@ jobs:
             OUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
+          # Get the token
+          TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
+
+          # Check if the version already exists
+          EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
+          | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
+
+          if [[ $EXISTS == "true" ]]; then
+            # Set this output so we can trigger "failed" status
+            # on another step, to remind us to bump the version
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+          fi
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             EXISTS="false"
-          else
-            # Get the token
-            TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
-
-            # Check if the version already exists
-            EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
-            | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
           fi
 
           # If the version already exists, skip the build
@@ -76,3 +82,10 @@ jobs:
           context: apps/${{ matrix.containers.app }}/
           push: true
           tags: ghcr.io/truenas/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
+
+      - name: Set failed status if version exists
+        if: steps.prepare.outputs.EXISTS == 'true'
+        shell: bash
+        run: |
+          echo "Version ${{ steps.prepare.outputs.APP_VERSION }} already exists, please bump the version"
+          exit 1
