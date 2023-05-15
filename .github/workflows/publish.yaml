@@ -37,23 +37,23 @@ jobs:
           OUT_VERSION="$VERSION"
 
           # If this is a pull request, append the PR number
-          if [[ ${{ github.event_name }} == "pull_request" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             OUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
-          if [[ ${{ github.event_name }} == "pull_request" ]]; then
-            RESULT="true"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            EXISTS="false"
           else
             # Get the token
             TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
             # Check if the version already exists
-            RESULT=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
+            EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
             | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
           fi
 
           # If the version already exists, skip the build
-          if [[ $RESULT == "true" ]]; then
+          if [[ $EXISTS == "true" ]]; then
             echo "Version $OUT_VERSION already exists, skipping build"
             exit 1
           fi
