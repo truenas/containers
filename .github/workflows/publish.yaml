@@ -33,39 +33,42 @@ jobs:
           # Grab the version from the VERSION file
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
+          echo "OUTPUT_PROD_VERSION=$VERSION" >> $GITHUB_OUTPUT
+
           # Initialize the output
-          OUT_VERSION="$VERSION"
+          OUTPUT_VERSION="$VERSION"
 
           # If this is a pull request, append the PR number
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            OUT_VERSION="$VERSION-pr${{ github.event.number }}"
+            OUTPUT_VERSION="$VERSION-pr${{ github.event.number }}"
           fi
 
           # Get the token
           TOKEN=$(curl https://ghcr.io/token\?scope\="repository:truenas/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
 
-          # Check if the version already exists
+          # Check if the "production" version already exists
           EXISTS=$(curl -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/truenas/${{ matrix.containers.app }}/tags/list \
-          | jq --arg version "$OUT_VERSION" '.tags | index($version) != null')
+          | jq --arg version "$VERSION" '.tags | index($version) != null')
 
           if [[ $EXISTS == "true" ]]; then
             # Set this output so we can trigger "failed" status
             # on another step, to remind us to bump the version
-            echo "EXISTS=true" >> $GITHUB_OUTPUT
+            echo "OUTPUT_EXISTS=true" >> $GITHUB_OUTPUT
           fi
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Pretend the version doesn't exist, so we can build the PR tag
             EXISTS="false"
           fi
 
-          # If the version already exists, skip the build
+          # If the version already exists, skip the build (When not a PR)
           if [[ $EXISTS == "true" ]]; then
-            echo "Version $OUT_VERSION already exists, skipping build"
+            echo "Version $OUTPUT_VERSION already exists, skipping build"
             exit 1
           fi
 
           # Set the output
-          echo "APP_VERSION=$OUT_VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$OUTPUT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Log in to the Container registry
         if: steps.prepare.outputs.APP_VERSION != ''
@@ -84,8 +87,8 @@ jobs:
           tags: ghcr.io/truenas/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
 
       - name: Set failed status if version exists
-        if: steps.prepare.outputs.EXISTS == 'true'
+        if: steps.prepare.outputs.OUTPUT_EXISTS == 'true'
         shell: bash
         run: |
-          echo "Version ${{ steps.prepare.outputs.APP_VERSION }} already exists, please bump the version"
+          echo "Version ${{ steps.prepare.outputs.OUTPUT_PROD_VERSION }} already exists, please bump the version"
           exit 1
