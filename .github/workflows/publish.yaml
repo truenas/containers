@@ -33,7 +33,20 @@ jobs:
           # Grab the version from the VERSION file
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
-          echo "OUTPUT_PROD_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Get the dockerhub token
+          TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ixsystems/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
+
+          # Check if the "production" version already exists in dokerhub
+          # FIXME: if auhtorization fails, this will think the tag does not exist
+          EXISTS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list" \
+            | jq --arg version "$VERSION" '.tags | index($version) != null')
+
+          # If the version already exists, fail fast
+          if [[ $EXISTS == "true" ]]; then
+            echo "Version $VERSION already exists, please bump the version in the VERSION file."
+            # If the "production" version already exists, fail fast
+            exit 1
+          fi
 
           # Initialize the output
           OUTPUT_VERSION="$VERSION"
@@ -41,31 +54,6 @@ jobs:
           # If this is a pull request, append the PR number
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             OUTPUT_VERSION="$VERSION-pr${{ github.event.number }}"
-          fi
-
-          # Get the token
-          TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ixsystems/${{ matrix.containers.app }}:pull" | jq '.token' --raw-output)
-
-          # Check if the "production" version already exists
-          EXISTS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list" \
-            | jq --arg version "$VERSION" '.tags | index($version) != null')
-
-          # If "production" version exists...
-          if [[ $EXISTS == "true" ]]; then
-            # Set this output so we can trigger "failed" status
-            # on another step, to remind us to bump the version
-            echo "OUTPUT_EXISTS=true" >> $GITHUB_OUTPUT
-          fi
-
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Pretend the version doesn't exist, so we can build the PR tag
-            EXISTS="false"
-          fi
-
-          # If the version already exists, skip the build (When not a PR)
-          if [[ $EXISTS == "true" ]]; then
-            echo "Version $OUTPUT_VERSION already exists, skipping build"
-            exit 1
           fi
 
           # Set the output
@@ -85,10 +73,3 @@ jobs:
           push: true
           tags: |
             ixsystems/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
-
-      - name: Set failed status if version exists
-        if: steps.prepare.outputs.OUTPUT_EXISTS == 'true'
-        shell: bash
-        run: |
-          echo "Version ${{ steps.prepare.outputs.OUTPUT_PROD_VERSION }} already exists, please bump the version"
-          exit 1
