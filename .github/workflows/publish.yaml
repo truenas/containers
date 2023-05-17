@@ -39,11 +39,17 @@ jobs:
           # Check if the "production" version already exists in dokerhub
           TAGS=$(curl -H "Authorization: Bearer $TOKEN" "https://index.docker.io/v2/ixsystems/${{ matrix.containers.app }}/tags/list")
 
-          # If we failed to get the tags, fail fast
-          if echo "$TAGS" | grep -q "errors"; then
-            echo "Failed to get tags from dockerhub"
-            echo "$TAGS"
+          # If we get UNAUTHORIZED, either the repo is not public or repo does not exist
+          if echo "$TAGS" | grep -q "UNAUTHORIZED"; then
+            echo "Either the repo is not public or repo does not exist"
             exit 1
+          fi
+
+          # If we get NAME_UNKNOWN, most likely there are no tags for this repo
+          if echo "$TAGS" | grep -q "NAME_UNKNOWN"; then
+            echo "Looks like there are no tags for this repo in dockerhub"
+            echo "$TAGS"
+            echo "Continuing..."
           fi
 
           # Check if the version already exists
