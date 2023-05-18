@@ -29,6 +29,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
 
+      # Login first so we can pull the manifest
+      # even if the repository is private
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
@@ -43,16 +45,16 @@ jobs:
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
           result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION" || echo 1)
-          echo "Result: $result"
 
+          # Result contains 1 if the tag does not exist or a JSON object if it does.
+          # If the result is not 1, means the "production" tag exists.
+          # We should fail the build and ask for a version bump.
           if [[ "$result" != 1 ]]; then
             echo "Version $VERSION already exists, please bump the version in the VERSION file."
-            # If the "production" version already exists, fail fast
             exit 1
           fi
 
           echo "Version $VERSION does not exist, proceeding with build."
-
           # Initialize the output
           OUTPUT_VERSION="$VERSION"
 
