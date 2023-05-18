@@ -42,7 +42,7 @@ jobs:
           # Grab the version from the VERSION file
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
-          result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION-pr1" || echo 1)
+          result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION" || echo 1)
           echo "Result: $result"
 
           if [[ "$result" != 1 ]]; then
