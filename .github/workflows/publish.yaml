@@ -43,7 +43,9 @@ jobs:
           VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
 
           result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION-pr1" || echo 1)
-          if [[ "$result" == 0 ]]; then
+          echo "Result: $result"
+
+          if [[ "$result" != 1 ]]; then
             echo "Version $VERSION already exists, please bump the version in the VERSION file."
             # If the "production" version already exists, fail fast
             exit 1
