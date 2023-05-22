@@ -60,7 +60,7 @@ jobs:
 
           # If this is a pull request, append the PR number
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            OUTPUT_VERSION="$VERSION-pr${{ github.event.number }}"
+            OUTPUT_VERSION="unstable"
           fi
 
           # Set the output
