@@ -25,19 +25,47 @@ jobs:
       matrix:
         containers:
           - app: tftpd-hpa
+          - app: rsyncd
+
     steps:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v36
+        with:
+          files: |
+            apps/${{ matrix.containers.app }}/**
+
+      # TODO: We should later look into getting the changed files before the matrix
+      # and generate a matrix based on the changed files.
+      - name: Detect changes
+        id: detect_changes
+        shell: bash
+        run: |
+          if [ -n "${{ steps.changed-files.outputs.all_changed_files }}" ]; then
+            echo "Changes detected, proceeding with build."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No changes detected, skipping build."
+          echo "skip=true" >> $GITHUB_OUTPUT
 
       # Login first so we can pull the manifest
       # even if the repository is private
       - name: Login to DockerHub
+        if: steps.detect_changes.outputs.skip == 'false'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Prepare
+        if: steps.detect_changes.outputs.skip == 'false'
         id: prepare
         shell: bash
         run: |
@@ -67,7 +95,7 @@ jobs:
           echo "APP_VERSION=$OUTPUT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker images
-        if: steps.prepare.outputs.APP_VERSION != ''
+        if: ${{ steps.detect_changes.outputs.skip == 'false' && steps.prepare.outputs.APP_VERSION != '' }}
         uses: docker/build-push-action@91df6b874e498451163feb47610c87c4a218c1ee
         with:
           context: apps/${{ matrix.containers.app }}/
