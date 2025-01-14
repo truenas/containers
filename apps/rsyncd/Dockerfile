@@ -8,6 +8,8 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN rsync --version
+
 ENTRYPOINT ["rsync", "--daemon", "--no-detach", "--config=/etc/rsyncd.conf"]
 
 HEALTHCHECK --interval=5s --timeout=10s --retries=3 \
