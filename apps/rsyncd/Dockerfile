@@ -4,9 +4,11 @@ LABEL maintainer="iXsystems <dev@ixsystems.com>"
 LABEL description="rsynd on debian bookworm"
 
 RUN apt update && \
-    apt install -y rsync procps && \
+    apt install -y rsync=3.2.7-1+deb12u1  procps && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN rsync --version
 
 ENTRYPOINT ["rsync", "--daemon", "--no-detach", "--config=/etc/rsyncd.conf"]
 
