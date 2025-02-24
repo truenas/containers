@@ -26,6 +26,7 @@ jobs:
         containers:
           - app: tftpd-hpa
           - app: rsyncd
+          - app: postgres-upgrade
 
     steps:
       - name: Checkout
