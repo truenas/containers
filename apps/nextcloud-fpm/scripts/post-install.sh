@@ -23,6 +23,10 @@ else
   occ_redis_remove
 fi
 
+# Configure Database
+echo ''
+occ_database
+
 echo ''
 # If Imaginary is enabled, previews are forced enabled
 if [ "${IX_IMAGINARY:-"true"}" = "true" ]; then
