@@ -77,3 +77,15 @@ set_list() {
     done
   fi
 }
+
+extract_domain() {
+  url="$1"
+
+  # Remove http(s):// from URL
+  domain="${url#*://}"
+
+  # Remove /foo (subfolder) from domain
+  domain="${domain%%/*}"
+
+  echo "$domain"
+}

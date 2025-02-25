@@ -35,6 +35,23 @@ occ_general
 echo ''
 occ_logging
 
+# Configure URLs (Trusted Domains, Trusted Proxies, Overwrites, etc)
+echo ''
+occ_urls
+
+# Configure Expiration/Retention Days
+echo ''
+occ_expire_retention
+
+echo ''
+if [ "${IX_NOTIFY_PUSH:-"true"}" = "true" ]; then
+  echo '# Notify Push is enabled.'
+  occ_notify_push_install
+else
+  echo '# Notify Push is disabled.'
+  occ_notify_push_remove
+fi
+
 echo ''
 # If Imaginary is enabled, previews are forced enabled
 if [ "${IX_IMAGINARY:-"true"}" = "true" ]; then
