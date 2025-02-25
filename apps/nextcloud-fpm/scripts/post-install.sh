@@ -44,3 +44,12 @@ else
   echo '# ClamAV is disabled.'
   occ_clamav_remove
 fi
+
+echo ''
+if [ "${IX_COLLABORA:-"false"}" = "true" ]; then
+  echo '# Collabora is enabled.'
+  occ_collabora_install
+else
+  echo '# Collabora is disabled.'
+  occ_collabora_remove
+fi
