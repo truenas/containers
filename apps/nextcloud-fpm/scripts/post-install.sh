@@ -14,6 +14,14 @@ echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
 echo ''
 
 ### Start Configuring ###
+# Configure Redis
+if [ "${IX_REDIS:-"true"}" = "true" ]; then
+  echo '# Redis is enabled.'
+  occ_redis_install
+else
+  echo '# Redis is disabled.'
+  occ_redis_remove
+fi
 
 echo ''
 # If Imaginary is enabled, previews are forced enabled
