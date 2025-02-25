@@ -68,3 +68,23 @@ if [ "${IX_ONLYOFFICE:-"false"}" = "true" ] || [ "${IX_COLLABORA:-"false"}" = "t
 else
   occ config:system:delete allow_local_remote_servers
 fi
+
+echo ''
+echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
+### End Configuring ###
+
+echo '--------------------------------------------------'
+echo ''
+
+# Run optimize/repairs/migrations
+if [ "${IX_RUN_OPTIMIZE:-"true"}" = "true" ]; then
+  echo '# Optimize is enabled. Running...'
+  occ_optimize
+else
+  echo '# Optimize is disabled. Skipping...'
+fi
+
+echo ''
+echo '--------------------------------------------------'
+
+echo 'Starting Nextcloud PHP-FPM'
