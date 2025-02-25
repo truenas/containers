@@ -31,6 +31,10 @@ occ_database
 echo ''
 occ_general
 
+# Configure Logging
+echo ''
+occ_logging
+
 echo ''
 # If Imaginary is enabled, previews are forced enabled
 if [ "${IX_IMAGINARY:-"true"}" = "true" ]; then
