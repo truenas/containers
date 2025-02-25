@@ -53,3 +53,18 @@ else
   echo '# Collabora is disabled.'
   occ_collabora_remove
 fi
+
+echo ''
+if [ "${IX_ONLYOFFICE:-"false"}" = "true" ]; then
+  echo '# OnlyOffice is enabled.'
+  occ_onlyoffice_install
+else
+  echo '# OnlyOffice is disabled.'
+  occ_onlyoffice_remove
+fi
+
+if [ "${IX_ONLYOFFICE:-"false"}" = "true" ] || [ "${IX_COLLABORA:-"false"}" = "true" ]; then
+  occ config:system:set allow_local_remote_servers --value="true"
+else
+  occ config:system:delete allow_local_remote_servers
+fi
