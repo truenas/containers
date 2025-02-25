@@ -14,11 +14,13 @@ check_writable() {
   local path=$1
   if [ ! -w "$path" ]; then
     log "$path is not writable"
-    exit 1
+    return 1
   fi
+
+  return 0
 }
 
-check_writable "$DATA_DIR"
+check_writable "$DATA_DIR" || exit 1
 
 # Don't do anything if its a fresh install.
 if [ ! -f "$DATA_DIR/PG_VERSION" ]; then
