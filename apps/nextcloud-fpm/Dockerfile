@@ -113,4 +113,4 @@ COPY --chmod=755 ./scripts/post-install.sh /docker-entrypoint-hooks.d/before-sta
 # Copy the php-cron script (wraps nextcloud cron.php)
 COPY --chmod=755 ./scripts/php-cron /php-cron
 # Copy the supercronic cron daemon script
-COPY --chmod=755 ./scripts/run-cron-daemon.sh /run-cron-daemon.sh
+COPY --chmod=755 ./scripts/cron.sh /cron.sh
