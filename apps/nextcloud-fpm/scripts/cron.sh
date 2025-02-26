@@ -15,12 +15,16 @@ echo "Testing crontab file: ${cron_file}"
 echo "NOTE: You may see parsing errors below, which is normal."
 echo "Supercronic tests each entry as both 5-field (standard) and 6-field formats."
 echo "If the final message shows 'crontab is valid', your configuration is correct."
+echo ''
 
+echo '--------------------------------------------------'
 # Validate crontab
 /usr/local/bin/supercronic -debug -test "${cron_file}" || {
   echo "ERROR: Crontab validation failed. Please check your syntax."
   exit 1
 }
+echo '--------------------------------------------------'
 
+echo ''
 echo "Crontab validation successful. Starting supercronic service..."
 /usr/local/bin/supercronic "${cron_file}"
