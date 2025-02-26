@@ -13,6 +13,11 @@
       matchUpdateTypes: ["patch", "minor", "major"],
     },
     {
+      enabled: true,
+      matchDatasources: ["github-releases"],
+      matchUpdateTypes: ["patch", "minor", "major"],
+    },
+    {
       matchBaseBranches: ["master"],
       addLabels: ["master"],
     },
@@ -31,6 +36,15 @@
     {
       matchUpdateTypes: ["patch"],
       addLabels: ["patch"],
+    },
+  ],
+  regexManagers: [
+    {
+      fileMatch: ["Dockerfile"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sENV .*?_VERSION=(?<currentValue>.*)",
+      ],
+      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
     },
   ],
 }
