@@ -5,6 +5,7 @@ echo ''
 ### Source all configure-scripts. ###
 for script in /configure-scripts/*.sh; do
   echo "Sourcing $script"
+  # shellcheck disable=SC1090
   . "$script"
 done
 

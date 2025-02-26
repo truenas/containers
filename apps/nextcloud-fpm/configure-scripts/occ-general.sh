@@ -4,7 +4,7 @@ occ_general() {
   occ config:system:set upgrade.disable-web --type=bool --value=true
 
   echo '## Configuring Default Phone Region...'
-  occ config:system:set default_phone_region --value=${IX_DEFAULT_PHONE_REGION:-GR}
+  occ config:system:set default_phone_region --value="${IX_DEFAULT_PHONE_REGION:-GR}"
 
   echo '## Configuring "Shared" folder...'
   occ config:system:set share_folder --value="${IX_SHARED_FOLDER_NAME:-/}"
