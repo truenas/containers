@@ -3,11 +3,11 @@
   enabled: true,
   dependencyDashboard: true,
   dependencyDashboardTitle: "🤖 Renovate Dashboard",
+  automerge: false,
 
   // People
-  assigneesFromCodeOwners: true,
-  reviewersFromCodeOwners: true,
   gitAuthor: "bugclerk <bugclerk@ixsystems.com>",
+  reviewers: ["stavros-k"],
 
   // Functionality
   rebaseWhen: "conflicted",
