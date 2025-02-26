@@ -1,64 +1,36 @@
 {
   enabled: true,
   dependencyDashboard: true,
-  dependencyDashboardTitle: '🤖 Renovate Dashboard',
+  dependencyDashboardTitle: "🤖 Renovate Dashboard",
   automerge: false,
-  gitAuthor: 'bugclerk <bugclerk@ixsystems.com>',
-  reviewers: [
-    'stavros-k',
-  ],
-  rebaseWhen: 'conflicted',
+  gitAuthor: "bugclerk <bugclerk@ixsystems.com>",
+  reviewers: ["stavros-k"],
+  rebaseWhen: "conflicted",
   packageRules: [
     {
       enabled: true,
-      matchManagers: [
-        'dockerfile',
-      ],
-      matchUpdateTypes: [
-        'patch',
-        'minor',
-        'major',
-      ],
+      matchManagers: ["dockerfile"],
+      matchUpdateTypes: ["patch", "minor", "major"],
     },
     {
-      matchBaseBranches: [
-        'master',
-      ],
-      addLabels: [
-        'master',
-      ],
+      matchBaseBranches: ["master"],
+      addLabels: ["master"],
     },
     {
-      matchDepTypes: [
-        'action',
-      ],
-      addLabels: [
-        'actions',
-      ],
+      matchDepTypes: ["action"],
+      addLabels: ["actions"],
     },
     {
-      matchUpdateTypes: [
-        'major',
-      ],
-      addLabels: [
-        'major',
-      ],
+      matchUpdateTypes: ["major"],
+      addLabels: ["major"],
     },
     {
-      matchUpdateTypes: [
-        'minor',
-      ],
-      addLabels: [
-        'minor',
-      ],
+      matchUpdateTypes: ["minor"],
+      addLabels: ["minor"],
     },
     {
-      matchUpdateTypes: [
-        'patch',
-      ],
-      addLabels: [
-        'patch',
-      ],
+      matchUpdateTypes: ["patch"],
+      addLabels: ["patch"],
     },
   ],
 }
