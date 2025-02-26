@@ -19,6 +19,7 @@ update_db_config() {
 
     include(\$filepath);
     \$CONFIG[\$key] = (string)\$encoded_value;
+    echo "Updating \$CONFIG[\$key] to \$encoded_value in \$filepath";
     file_put_contents(\$filepath, "<?php\n\\\$CONFIG = ".var_export(\$CONFIG, true).";\n");
 EOF
 }
