@@ -1,23 +1,17 @@
 {
-  // General
   enabled: true,
   dependencyDashboard: true,
   dependencyDashboardTitle: "🤖 Renovate Dashboard",
   automerge: false,
-
-  // People
   gitAuthor: "bugclerk <bugclerk@ixsystems.com>",
   reviewers: ["stavros-k"],
-
-  // Functionality
   rebaseWhen: "conflicted",
   packageRules: [
     {
       enabled: true,
       matchManagers: ["dockerfile"],
-      updateTypes: ["patch", "minor", "major"],
+      matchUpdateTypes: ["patch", "minor", "major"],
     },
-    // Labels
     {
       matchBaseBranches: ["master"],
       addLabels: ["master"],
