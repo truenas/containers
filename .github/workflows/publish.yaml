@@ -71,7 +71,16 @@ jobs:
         shell: bash
         run: |
           # Grab the version from the VERSION file
-          VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION )
+          if [ -f ./apps/${{ matrix.containers.app }}/get_version.sh ]; then
+            if [ ! -x ./apps/${{ matrix.containers.app }}/get_version.sh ]; then
+              echo "get_version.sh is not executable, please check the permissions."
+              exit 1
+            fi
+            VERSION=$(./apps/${{ matrix.containers.app }}/get_version.sh ./apps/${{ matrix.containers.app }})
+          else
+            VERSION=$(cat ./apps/${{ matrix.containers.app }}/VERSION)
+          fi
+          echo "Version: $VERSION"
 
           result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION" || echo 1)
 
@@ -91,6 +100,8 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             OUTPUT_VERSION="unstable"
           fi
+
+          echo "Final version: $OUTPUT_VERSION"
 
           # Set the output
           echo "APP_VERSION=$OUTPUT_VERSION" >> $GITHUB_OUTPUT
