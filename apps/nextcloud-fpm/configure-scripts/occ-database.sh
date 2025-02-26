@@ -26,7 +26,7 @@ EOF
 occ_database() {
   echo '## Configuring Database...'
 
-  config_file="{$IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
+  config_file="${IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
 
   if [ ! -f "$config_file" ]; then
     echo "Config file $config_file does not exist. Something is wrong."
