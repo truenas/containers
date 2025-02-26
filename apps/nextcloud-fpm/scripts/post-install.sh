@@ -14,15 +14,6 @@ echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
 echo ''
 
 ### Start Configuring ###
-# Configure Redis
-if [ "${IX_REDIS:-"true"}" = "true" ]; then
-  echo '# Redis is enabled.'
-  occ_redis_install
-else
-  echo '# Redis is disabled.'
-  occ_redis_remove
-fi
-
 # Configure Database
 echo ''
 occ_database
@@ -42,6 +33,15 @@ occ_urls
 # Configure Expiration/Retention Days
 echo ''
 occ_expire_retention
+
+# Configure Redis
+if [ "${IX_REDIS:-"true"}" = "true" ]; then
+  echo '# Redis is enabled.'
+  occ_redis_install
+else
+  echo '# Redis is disabled.'
+  occ_redis_remove
+fi
 
 echo ''
 if [ "${IX_NOTIFY_PUSH:-"true"}" = "true" ]; then

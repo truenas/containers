@@ -41,11 +41,11 @@
 
 ### Expiration/Retention
 
-| Variable                  | Description                      |  App(s)  |          Config Key(s)          | Default | Example |
-| ------------------------- | -------------------------------- | :------: | :-----------------------------: | :-----: | :-----: |
-| `IX_ACTIVITY_EXPIRE_DAYS` | Expire days for activity app     | `system` |     `activity_expire_days`      |  `90`   |  `60`   |
-| `IX_TRASH_RETENTION`      | Retention time for deleted files | `system` | `trashbin_retention_obligation` | `auto`  | `30,60` |
-| `IX_VERSION_RETENTION`    | Retention time for old versions  | `system` | `versions_retention_obligation` | `auto`  | `30,60` |
+| Variable                  | Description                      |   App(s)   |          Config Key(s)          | Default | Example |
+| ------------------------- | -------------------------------- | :--------: | :-----------------------------: | :-----: | :-----: |
+| `IX_ACTIVITY_EXPIRE_DAYS` | Expire days for activity app     | `activity` |     `activity_expire_days`      |  `365`  |  `90`   |
+| `IX_TRASH_RETENTION`      | Retention time for deleted files |  `system`  | `trashbin_retention_obligation` | `auto`  | `30,60` |
+| `IX_VERSION_RETENTION`    | Retention time for old versions  |  `system`  | `versions_retention_obligation` | `auto`  | `30,60` |
 
 ### Redis
 
