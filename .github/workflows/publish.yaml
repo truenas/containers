@@ -27,6 +27,7 @@ jobs:
           - app: tftpd-hpa
           - app: rsyncd
           - app: postgres-upgrade
+          - app: nextcloud-fpm
 
     steps:
       - name: Checkout
