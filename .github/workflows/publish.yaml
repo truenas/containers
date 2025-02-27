@@ -55,6 +55,7 @@ jobs:
           - app: rsyncd
           - app: postgres-upgrade
           - app: nextcloud-fpm
+          - app: nextcloud-notify-push
 
     steps:
       - name: Checkout
