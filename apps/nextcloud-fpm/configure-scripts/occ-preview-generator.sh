@@ -11,7 +11,7 @@ occ_preview_generator_install() {
     IX_PREVIEW_PROVIDERS="Imaginary ${IX_PREVIEW_PROVIDERS}"
   fi
 
-  set_list 'enabledPreviewProviders' "${IX_PREVIEW_PROVIDERS}" 'system' 'OC\Preview\'
+  set_list 'enabledPreviewProviders' "${IX_PREVIEW_PROVIDERS}" 'system' "OC\\Preview\\"
 
   echo '## Configuring Preview Generation Configuration...'
   occ config:system:set enable_previews --value=true

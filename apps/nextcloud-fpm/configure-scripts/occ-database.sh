@@ -19,6 +19,7 @@ update_db_config() {
 
     include(\$filepath);
     \$CONFIG[\$key] = (string)\$encoded_value;
+    echo "Updating \$CONFIG[\$key] to \$encoded_value in \$filepath";
     file_put_contents(\$filepath, "<?php\n\\\$CONFIG = ".var_export(\$CONFIG, true).";\n");
 EOF
 }
@@ -26,7 +27,7 @@ EOF
 occ_database() {
   echo '## Configuring Database...'
 
-  config_file="{$IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
+  config_file="${IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
 
   if [ ! -f "$config_file" ]; then
     echo "Config file $config_file does not exist. Something is wrong."

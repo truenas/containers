@@ -89,6 +89,13 @@ RUN set -ex; \
   # Clean up the package cache to reduce the size of the Docker image
   rm -rf /var/lib/apt/lists/*
 
+# renovate: datasource=github-releases depName=aptible/supercronic
+ENV SUPERCRONIC_VERSION=v0.2.32
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64
+RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
+  chmod +x /usr/local/bin/supercronic
+
+
 # See https://github.com/nextcloud/docker/issues/763
 RUN set -ex; \
   \
@@ -103,3 +110,7 @@ COPY --chmod=755 ./scripts/occ /usr/bin/occ
 COPY --chmod=755 ./configure-scripts /configure-scripts
 # Copy post-install script to the `before-starting` hooks dir so nextcloud will run those automatically.
 COPY --chmod=755 ./scripts/post-install.sh /docker-entrypoint-hooks.d/before-starting/10-post-install.sh
+# Copy the php-cron script (wraps nextcloud cron.php)
+COPY --chmod=755 ./scripts/php-cron /php-cron
+# Copy the supercronic cron daemon script
+COPY --chmod=755 ./scripts/cron.sh /cron.sh
