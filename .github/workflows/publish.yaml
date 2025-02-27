@@ -15,6 +15,30 @@ env:
   REPOSITORY: ixsystems
 
 jobs:
+  lint:
+    name: Run Linters
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Run Hadolint
+        uses: reviewdog/action-hadolint@48e0d147329dca2fa1663f4a9b6b715b57dcfe28 # v1.50.0
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_level: error
+          filter_mode: diff_context
+      - name: Run ShellCheck
+        uses: reviewdog/action-shellcheck@6e0e63d1750d02d761b3df0f2c5ba9f9ac4a9ed7 # v1.29.0
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_level: error
+          filter_mode: diff_context
+
   build:
     permissions:
       packages: write
