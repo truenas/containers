@@ -1,5 +1,4 @@
 #!/bin/sh
-
 occ_imaginary_install() {
   echo '## Configuring Imaginary...'
   echo ''
