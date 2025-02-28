@@ -1,9 +1,11 @@
 #!/bin/sh
 occ_preview_generator_install() {
   echo '## Configuring Preview Generator...'
+  echo ''
+
   install_app previewgenerator
 
-  echo '## Configuring Preview Providers...'
+  echo '### Configuring Preview Providers...'
   [ "${IX_PREVIEW_PROVIDERS:?"IX_PREVIEW_PROVIDERS is unset"}" ]
 
   # Adds Imaginary if enabled
@@ -13,7 +15,7 @@ occ_preview_generator_install() {
 
   set_list 'enabledPreviewProviders' "${IX_PREVIEW_PROVIDERS}" 'system' "OC\\Preview\\"
 
-  echo '## Configuring Preview Generation Configuration...'
+  echo '### Configuring Preview Generation Configuration...'
   occ config:system:set enable_previews --value=true
   occ config:system:set jpeg_quality --value="${IX_JPEG_QUALITY:-60}" --type=integer
   occ config:system:set preview_max_x --value="${IX_PREVIEW_MAX_X:-2048}" --type=integer
@@ -28,12 +30,14 @@ occ_preview_generator_install() {
 
 occ_preview_generator_remove() {
   echo '## Removing Preview Generator...'
+  echo ''
+
   remove_app previewgenerator
 
-  echo '## Removing Preview Providers...'
+  echo '### Removing Preview Providers...'
   occ config:system:delete enabledPreviewProviders
 
-  echo '## Removing Preview Generation Configuration...'
+  echo '### Removing Preview Generation Configuration...'
   occ config:system:set enable_previews --value=false
   occ config:system:delete jpeg_quality
   occ config:system:delete preview_max_x

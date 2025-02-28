@@ -26,6 +26,7 @@ EOF
 
 occ_database() {
   echo '## Configuring Database...'
+  echo ''
 
   config_file="${IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
 
