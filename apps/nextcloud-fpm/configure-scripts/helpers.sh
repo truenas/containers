@@ -6,11 +6,20 @@ install_app() {
 
   echo "Installing [$app_name]..."
 
-  if occ app:list | grep -wq "$app_name"; then
-    echo "App [$app_name] is already installed! Skipping..."
+  disabled_apps=$(occ app:list | yq '.Disabled')
+  if echo "$disabled_apps" | grep -wq "$app_name"; then
+    echo "App [$app_name] is installed but disabled! Enabling..."
+    occ app:enable "$app_name"
     return 0
   fi
 
+  enabled_apps=$(occ app:list | yq '.Enabled')
+  if echo "$enabled_apps" | grep -wq "$app_name"; then
+    echo "App [$app_name] is installed and enabled! Skipping..."
+    return 0
+  fi
+
+  # Here the app is not installed and we need to install it
   if ! occ app:install "$app_name"; then
     echo "Failed to install $app_name..."
     exit 1
@@ -24,11 +33,21 @@ remove_app() {
 
   echo "Removing [$app_name]..."
 
-  if ! occ app:list | grep -wq "$app_name"; then
+  disabled_apps=$(occ app:list | yq '.Disabled')
+  if echo "$disabled_apps" | grep -wq "$app_name"; then
+    echo "App [$app_name] is disabled! Enabling temporarily to remove..."
+    echo "Reason: https://github.com/nextcloud/server/issues/49689"
+    occ app:enable "$app_name"
+  fi
+
+  # Here the app is either enabled or not installed. Skip if not installed
+  enabled_apps=$(occ app:list | yq '.Enabled')
+  if ! echo "$enabled_apps" | grep -wq "$app_name"; then
     echo "App [$app_name] is not installed! Skipping..."
     return 0
   fi
 
+  # Here the app is installed and enabled. Remove it
   if ! occ app:remove "$app_name"; then
     echo "Failed to remove [$app_name]..."
     exit 1
