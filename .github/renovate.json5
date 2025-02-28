@@ -38,7 +38,7 @@
       addLabels: ["patch"],
     },
   ],
-  regexManagers: [
+  customManagers: [
     {
       fileMatch: ["Dockerfile"],
       matchStrings: [
