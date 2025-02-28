@@ -16,10 +16,12 @@ echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
 echo ''
 
 ### Start Configuring ###
+
 # Configure Database
 echo ''
 occ_database
 
+echo ''
 # Configure Redis
 if [ "${IX_REDIS:-"true"}" = "true" ]; then
   echo '# Redis is enabled.'
