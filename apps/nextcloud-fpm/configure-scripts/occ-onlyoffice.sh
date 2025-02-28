@@ -1,6 +1,8 @@
 #!/bin/sh
 occ_onlyoffice_install() {
   echo '## Configuring OnlyOffice...'
+  echo ''
+
   install_app onlyoffice
 
   occ config:app:set onlyoffice DocumentServerUrl --value="${IX_ONLYOFFICE_URL:?"IX_ONLYOFFICE_URL is unset"}"
@@ -10,6 +12,8 @@ occ_onlyoffice_install() {
 
 occ_onlyoffice_remove() {
   echo '## Removing OnlyOffice Configuration...'
+  echo ''
+
   remove_app onlyoffice
 
   occ config:app:delete onlyoffice DocumentServerUrl

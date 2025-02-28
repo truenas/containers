@@ -1,6 +1,8 @@
 #!/bin/sh
 occ_optimize() {
   echo '## Applying migrations/repairs/optimizations...'
+  echo ''
+
   occ db:add-missing-indices
   occ db:add-missing-columns
   occ db:add-missing-primary-keys

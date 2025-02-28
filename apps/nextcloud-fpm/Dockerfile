@@ -95,6 +95,11 @@ ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${S
 RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
   chmod +x /usr/local/bin/supercronic
 
+# renovate: datasource=github-releases depName=mikefarah/yq
+ENV YQ_VERSION=v4.45.1
+ENV YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+RUN curl -fsSL "${YQ_URL}" -o /usr/local/bin/yq && \
+  chmod +x /usr/local/bin/yq
 
 # See https://github.com/nextcloud/docker/issues/763
 RUN set -ex; \

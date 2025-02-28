@@ -38,8 +38,9 @@
       addLabels: ["patch"],
     },
   ],
-  regexManagers: [
+  customManagers: [
     {
+      customType: "regex",
       fileMatch: ["Dockerfile"],
       matchStrings: [
         "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sENV .*?_VERSION=(?<currentValue>.*)",

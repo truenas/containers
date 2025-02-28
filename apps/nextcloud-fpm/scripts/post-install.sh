@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
 echo ''
@@ -15,26 +16,12 @@ echo '++++++++++++++++++++++++++++++++++++++++++++++++++'
 echo ''
 
 ### Start Configuring ###
+
 # Configure Database
 echo ''
 occ_database
 
-# Configure General Settings
 echo ''
-occ_general
-
-# Configure Logging
-echo ''
-occ_logging
-
-# Configure URLs (Trusted Domains, Trusted Proxies, Overwrites, etc)
-echo ''
-occ_urls
-
-# Configure Expiration/Retention Days
-echo ''
-occ_expire_retention
-
 # Configure Redis
 if [ "${IX_REDIS:-"true"}" = "true" ]; then
   echo '# Redis is enabled.'
@@ -45,6 +32,23 @@ else
 fi
 
 echo ''
+# Configure General Settings
+occ_general
+
+echo ''
+# Configure Logging
+occ_logging
+
+echo ''
+# Configure URLs (Trusted Domains, Trusted Proxies, Overwrites, etc)
+occ_urls
+
+echo ''
+# Configure Expiration/Retention Days
+occ_expire_retention
+
+echo ''
+# Configure Notify Push
 if [ "${IX_NOTIFY_PUSH:-"true"}" = "true" ]; then
   echo '# Notify Push is enabled.'
   occ_notify_push_install
@@ -75,6 +79,7 @@ else
 fi
 
 echo ''
+# Configure ClamAV
 if [ "${IX_CLAMAV:-"false"}" = "true" ]; then
   echo '# ClamAV is enabled.'
   occ_clamav_install
@@ -84,6 +89,7 @@ else
 fi
 
 echo ''
+# Configure Collabora
 if [ "${IX_COLLABORA:-"false"}" = "true" ]; then
   echo '# Collabora is enabled.'
   occ_collabora_install
@@ -93,6 +99,7 @@ else
 fi
 
 echo ''
+# Configure OnlyOffice
 if [ "${IX_ONLYOFFICE:-"false"}" = "true" ]; then
   echo '# OnlyOffice is enabled.'
   occ_onlyoffice_install
@@ -106,6 +113,10 @@ if [ "${IX_ONLYOFFICE:-"false"}" = "true" ] || [ "${IX_COLLABORA:-"false"}" = "t
 else
   occ config:system:delete allow_local_remote_servers
 fi
+
+echo ''
+# Perform cleanups
+occ_cleanups
 
 echo ''
 echo '++++++++++++++++++++++++++++++++++++++++++++++++++'

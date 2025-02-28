@@ -10,7 +10,7 @@ update_db_config() {
 
   # We Base64 encode and decode the value to safely handle special characters
   php <<EOF
-  <?php
+<?php
     \$key = '$key';
     \$value = '$value';
     \$filepath = '$filepath';
@@ -19,13 +19,14 @@ update_db_config() {
 
     include(\$filepath);
     \$CONFIG[\$key] = (string)\$encoded_value;
-    echo "Updating \$CONFIG[\$key] to \$encoded_value in \$filepath";
+    echo "Updating \$key to \$encoded_value in \$filepath\n";
     file_put_contents(\$filepath, "<?php\n\\\$CONFIG = ".var_export(\$CONFIG, true).";\n");
 EOF
 }
 
 occ_database() {
   echo '## Configuring Database...'
+  echo ''
 
   config_file="${IX_CONFIG_FILE_PATH:-/var/www/html/config/config.php}"
 
@@ -34,15 +35,15 @@ occ_database() {
     exit 1
   fi
 
+  echo "Using an inline php script to update the database config instead of occ..."
+  echo "Reason: https://github.com/nextcloud/server/issues/44924"
+
   update_db_config 'dbtype' 'pgsql' "${config_file}"
   update_db_config 'dbhost' "${IX_POSTGRES_HOST:?"IX_POSTGRES_HOST is unset"}" "${config_file}"
   update_db_config 'dbname' "${IX_POSTGRES_NAME:?"IX_POSTGRES_NAME is unset"}" "${config_file}"
   update_db_config 'dbuser' "${IX_POSTGRES_USER:?"IX_POSTGRES_USER is unset"}" "${config_file}"
   update_db_config 'dbpassword' "${IX_POSTGRES_PASSWORD:?"IX_POSTGRES_PASSWORD is unset"}" "${config_file}"
   update_db_config 'dbport' "${IX_POSTGRES_PORT:-5432}" "${config_file}"
-
-  # - https://github.com/nextcloud/server/issues/44924
-  # Due to a bug in Nextcloud, you cannot use `occ` to update the db config if you are not connected to the database.
 
   # occ config:system:set dbtype --value="pgsql"
   # occ config:system:set dbhost --value="${IX_POSTGRES_HOST:?"IX_POSTGRES_HOST is unset"}"

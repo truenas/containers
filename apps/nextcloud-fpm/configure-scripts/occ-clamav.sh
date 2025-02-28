@@ -1,6 +1,8 @@
 #!/bin/sh
 occ_clamav_install() {
   echo '## Configuring ClamAV...'
+  echo ''
+
   install_app files_antivirus
 
   occ config:app:set files_antivirus av_mode --value="daemon"
@@ -13,6 +15,8 @@ occ_clamav_install() {
 
 occ_clamav_remove() {
   echo '## Removing ClamAV Configuration...'
+  echo ''
+
   remove_app files_antivirus
 
   occ config:app:delete files_antivirus av_mode

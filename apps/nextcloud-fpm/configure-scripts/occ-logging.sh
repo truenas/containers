@@ -1,6 +1,8 @@
 #!/bin/sh
 occ_logging() {
   echo '## Configuring Logging...'
+  echo ''
+
   occ config:system:set log_type --value="file"
   occ config:system:set log_type_audit --value="file"
   occ config:system:set loglevel --value="${IX_LOG_LEVEL:-2}"
