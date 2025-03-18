@@ -34,7 +34,7 @@ jobs:
           fail_level: error
           filter_mode: diff_context
       - name: Run ShellCheck
-        uses: reviewdog/action-shellcheck@6e0e63d1750d02d761b3df0f2c5ba9f9ac4a9ed7 # v1.29.0
+        uses: reviewdog/action-shellcheck@57079a832290a049f49cee90984b072c870fb7d4 # v1.29.3
         continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
