@@ -1,4 +1,4 @@
-FROM nextcloud:31.0.1-fpm
+FROM nextcloud:31.0.2-fpm
 
 RUN set -ex; \
   \
@@ -60,6 +60,8 @@ RUN set -ex; \
   bz2 \
   # Adds support for IMAP mail protocol in PHP
   imap \
+  # Adds support for SOAP web services in PHP
+  soap \
   ; \
   # Install the smbclient extension from PECL (PHP Extension Community Library)
   # This allows PHP to interact with Windows/Samba file shares
