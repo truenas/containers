@@ -40,8 +40,6 @@ RUN set -ex; \
   apt-get install -y --no-install-recommends \
   # Development files for bzip2 compression
   libbz2-dev \
-  # Development files for XML
-  libxml2-dev \
   # Development files for Kerberos authentication
   libkrb5-dev \
   # Development files for c-client mail API (used by IMAP)
