@@ -1,4 +1,4 @@
-FROM nextcloud:31.0.1-fpm
+FROM nextcloud:31.0.2-fpm
 
 RUN set -ex; \
   \
@@ -40,6 +40,8 @@ RUN set -ex; \
   apt-get install -y --no-install-recommends \
   # Development files for bzip2 compression
   libbz2-dev \
+  # Development files for XML
+  libxml2-dev \
   # Development files for Kerberos authentication
   libkrb5-dev \
   # Development files for c-client mail API (used by IMAP)
@@ -60,6 +62,8 @@ RUN set -ex; \
   bz2 \
   # Adds support for IMAP mail protocol in PHP
   imap \
+  # Adds support for SOAP web services in PHP
+  soap \
   ; \
   # Install the smbclient extension from PECL (PHP Extension Community Library)
   # This allows PHP to interact with Windows/Samba file shares
