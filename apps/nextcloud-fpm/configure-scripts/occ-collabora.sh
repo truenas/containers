@@ -5,7 +5,7 @@ occ_collabora_install() {
 
   install_app richdocuments
 
-  occ config:app:set richdocuments wopi_url --value="${IX_COLLABORA_URL:?"IX_COLLABORA_URL is unset"}"
+  occ config:app:set richdocuments wopi_url --value="${IX_COLLABORA_INTERNAL_URL:?"IX_COLLABORA_INTERNAL_URL is unset"}"
   occ config:app:set richdocuments public_wopi_url --value="${IX_COLLABORA_URL:?"IX_COLLABORA_URL is unset"}"
   occ config:app:set richdocuments wopi_allowlist --value="${IX_COLLABORA_ALLOWLIST:?"IX_COLLABORA_ALLOWLIST is unset"}"
 }

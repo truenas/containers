@@ -95,11 +95,12 @@
 
 ### Collabora
 
-| Variable                 | Description                                 |     App(s)      |         Config Key(s)          | Default |             Example             |
-| ------------------------ | ------------------------------------------- | :-------------: | :----------------------------: | :-----: | :-----------------------------: |
-| `IX_COLLABORA`           | Enable Collabora                            |                 |                                | `false` |             `true`              |
-| `IX_COLLABORA_URL`       | Collabora URL                               | `richdocuments` | `wopi_url` \ `public_wopi_url` |  `""`   | `https://collabora.example.com` |
-| `IX_COLLABORA_ALLOWLIST` | Collabora WOPI Allow List (Comma Separated) | `richdocuments` |        `wopi_allowlist`        |  `""`   |   `172.16.0.0/12,10.0.0.0/12`   |
+| Variable                    | Description                                 |     App(s)      |   Config Key(s)   | Default |             Example             |
+| --------------------------- | ------------------------------------------- | :-------------: | :---------------: | :-----: | :-----------------------------: |
+| `IX_COLLABORA`              | Enable Collabora                            |                 |                   | `false` |             `true`              |
+| `IX_COLLABORA_URL`          | Collabora URL                               | `richdocuments` | `public_wopi_url` |  `""`   | `https://collabora.example.com` |
+| `IX_COLLABORA_INTERNAL_URL` | Collabora Internal URL                      | `richdocuments` |    `wopi_url`     |  `""`   |     `http://collabora:9980`     |
+| `IX_COLLABORA_ALLOWLIST`    | Collabora WOPI Allow List (Comma Separated) | `richdocuments` | `wopi_allowlist`  |  `""`   |   `172.16.0.0/12,10.0.0.0/12`   |
 
 ### Onlyoffice
 
