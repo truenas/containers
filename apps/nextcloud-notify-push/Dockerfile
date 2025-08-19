@@ -5,7 +5,7 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 RUN apk add --no-cache ca-certificates curl
 
 # renovate: datasource=github-releases depName=nextcloud/notify_push
-ENV NOTIFY_PUSH_VERSION=1.1.1
+ENV NOTIFY_PUSH_VERSION=1.2.0
 
 RUN set -ex; \
 	arch="x86_64"; \
