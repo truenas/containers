@@ -96,7 +96,7 @@ RUN set -ex \
   | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
   | sort -u \
   | xargs -rt dpkg-query --search \
-  | awk 'sub(":$", "", $1) { print $1 }' \
+  | cut -d: -f1 \
   | sort -u \
   | xargs -rt apt-mark manual \
   \
