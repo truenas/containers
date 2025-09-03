@@ -8,7 +8,16 @@ RUN set -ex \
   && apt-get update \
   && apt-get install -y --no-install-recommends gnupg2 lsb-release \
   && echo "deb https://packages.sury.org/php $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/sury-php.list \
-  && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-php.gpg
+  && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-php.gpg \
+  \
+  && apt-get update \
+  # Development files for c-client mail API (used by IMAP)
+  && apt-get install -y --no-install-recommends libc-client-dev \
+  \
+  # Block the repository completely for future use
+  && echo "Package: *" > /etc/apt/preferences.d/99-pin-sury \
+  && echo "Pin: origin packages.sury.org" >> /etc/apt/preferences.d/99-pin-sury \
+  && echo "Pin-Priority: -1" >> /etc/apt/preferences.d/99-pin-sury
 
 RUN set -ex \
   \
@@ -51,8 +60,6 @@ RUN set -ex \
   libbz2-dev \
   # Development files for Kerberos authentication
   libkrb5-dev \
-  # Development files for c-client mail API (used by IMAP)
-  libc-client-dev \
   # Development files for the SMB client library
   libsmbclient-dev \
   # Development files for ImageMagick core functionality
