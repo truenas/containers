@@ -13,6 +13,7 @@ RUN set -ex \
   && apt-get update \
   # Development files for c-client mail API (used by IMAP)
   && apt-get install -y --no-install-recommends libc-client-dev \
+  && apt-get dist-clean \
   \
   # Block the repository completely for future use
   && echo "Package: *" > /etc/apt/preferences.d/99-pin-sury \
