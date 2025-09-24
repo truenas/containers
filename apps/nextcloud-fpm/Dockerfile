@@ -107,7 +107,7 @@ RUN set -ex \
   && apt-get dist-clean
 
 # renovate: datasource=github-releases depName=aptible/supercronic
-ENV SUPERCRONIC_VERSION=v0.2.34
+ENV SUPERCRONIC_VERSION=v0.2.35
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64
 RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
   chmod +x /usr/local/bin/supercronic
