@@ -1,4 +1,4 @@
-FROM postgres:17.6-bookworm
+FROM postgres:17.7-bookworm
 
 RUN apt update
 
