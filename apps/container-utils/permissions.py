@@ -36,7 +36,7 @@ class FileMode:
         """
         self._mode = 0
         if mode_str:
-            if mode_str != "0" and not mode_str.startswith("0"):
+            if not mode_str.startswith("0"):
                 raise ValueError(
                     f"Invalid file mode format: {mode_str}. Mode must start with '0' (e.g., '0755')"
                 )
@@ -99,7 +99,7 @@ class Action:
             mode = ActionMode(mode_str)
         except ValueError:
             raise ValueError(
-                f"Invalid action mode '{mode_str}' in action '{data['identifier']}'"
+                f"Invalid action mode '{mode_str}' in action '{data.get('identifier', 'unknown')}'"
             )
 
         # Validate and parse chmod
@@ -107,7 +107,7 @@ class Action:
         try:
             chmod = FileMode(chmod_str)
         except ValueError as e:
-            raise ValueError(f"Invalid chmod in action '{data['identifier']}': {e}")
+            raise ValueError(f"Invalid chmod in action '{data.get('identifier', 'unknown')}': {e}")
 
         return cls(
             identifier=data["identifier"],
@@ -154,7 +154,7 @@ def load_actions(path: str = "/script/actions.json") -> list[Action]:
         try:
             actions.append(Action.from_dict(item))
         except Exception as e:
-            print(f"❌ Error loading action: {e}")
+            print(f"❌ Error loading action {item.get('identifier', 'unknown')}: {e}")
             sys.exit(1)
 
     return actions
@@ -229,7 +229,7 @@ def fix_permissions(path: str, mode: FileMode, recursive: bool, logger: Logger):
             for f in files:
                 os.chmod(os.path.join(root, f), mode.mode)
     stat_info = os.stat(path)
-    current_mode = FileMode(oct(stat_info.st_mode)[-3:])
+    current_mode = FileMode(f"0{oct(stat_info.st_mode)[-3:]}")
     logger.log(f"✅ Permissions after changes: [{current_mode}]")
 
 
@@ -262,17 +262,22 @@ def apply_action(action: Action) -> Optional[str]:
         for item in path.iterdir():
             if item.name == SAFE_DIRECTORY_NAME:
                 continue
-            if item.is_dir():
-                shutil.rmtree(item)
-            else:
-                item.unlink()
+            try:
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+            except Exception as e:
+                logger.log(f"❌ Error deleting {item}: {e}")
+                logger.separator("=")
+                return f"Failed to delete {item}: {e}"
     else:
         if any(path.iterdir()):
             logger.log("⏭️  Path is not empty, no changes will be applied")
             logger.separator("=")
             return None
     si = os.stat(action.path)
-    curr_mode = FileMode(oct(si.st_mode)[-3:])
+    curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     target_mode = action.chmod if action.chmod else curr_mode
     recursive_indicator = " [recursive]" if action.recursive else ""
     logger.log(
@@ -303,14 +308,14 @@ def apply_action(action: Action) -> Optional[str]:
                     "⏭️  Permissions will remain unchanged (chmod not configured)"
                 )
             else:
-                curr_mode = si.st_mode & 0o777
-                if curr_mode != action.chmod.mode:
+                curr_mode_bits = si.st_mode & 0o777
+                if curr_mode_bits != action.chmod.mode:
                     logger.log("❌ Permissions are incorrect. Fixing...")
                     fix_permissions(action.path, action.chmod, action.recursive, logger)
                 else:
                     logger.log("✅ Permissions are already correct, no changes needed")
         si = os.stat(action.path)
-        final_mode = FileMode(oct(si.st_mode)[-3:])
+        final_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
         logger.log(f"📊 Final: 👤 [{si.st_uid}:{si.st_gid}] 🔐 [{final_mode}]")
         logger.log(f"⏱️  Time taken: {(time.time() - start_time) * 1000:.2f}ms")
         logger.separator("=")
