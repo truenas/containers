@@ -236,18 +236,23 @@ def apply_action(action: Action) -> Optional[str]:
     """
     logger = Logger(action.identifier)
     logger.header()
+
     if action.read_only:
         logger.log("🔒 Status: READ-ONLY - Skipping...")
         logger.separator("=")
         return None
+
     start_time = time.time()
     path = Path(action.path)
+
     if not path.exists():
         return f"Path does not exist: {action.path}"
+
     if not path.is_dir():
         logger.log(f"⚠️  Path is not a directory, skipping...")
         logger.separator("=")
         return None
+
     if action.is_temporary:
         logger.log("🗑️  Temporary directory - ensuring it is empty...")
         for item in path.iterdir():
@@ -267,6 +272,7 @@ def apply_action(action: Action) -> Optional[str]:
             logger.log("⏭️  Path is not empty, no changes will be applied")
             logger.separator("=")
             return None
+
     si = os.stat(action.path)
     curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     target_mode = action.chmod if action.chmod else curr_mode
@@ -277,7 +283,6 @@ def apply_action(action: Action) -> Optional[str]:
     should_change_perms = action.chmod and curr_mode.mode != action.chmod.mode
 
     if action.mode == ActionMode.ALWAYS:
-        # ALWAYS mode applies unconditionally
         mode_desc = "Always. Applies changes regardless of current state"
         own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator} [will apply]"
         perm_log = f"🔐 Permissions: [{curr_mode}] [no change]"
@@ -285,7 +290,6 @@ def apply_action(action: Action) -> Optional[str]:
             perm_log = f"🔐 Permissions: [{curr_mode}] -> [{target_mode}] [will apply]"
     elif action.mode == ActionMode.CHECK:
         mode_desc = "Check. Only applies changes if are incorrect"
-        # CHECK mode only applies if needed
         own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] [no change]"
         if should_change_ownership:
             own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator} [will change]"
@@ -297,24 +301,17 @@ def apply_action(action: Action) -> Optional[str]:
     logger.log(own_log)
     logger.log(perm_log)
     logger.log(f"⚙️  Mode: {mode_desc}")
+
     try:
         if action.mode == ActionMode.ALWAYS:
             fix_ownership(action.path, action.uid, action.gid, action.recursive)
-            if not action.chmod:
-                logger.log(
-                    "⏭️  Permissions will remain unchanged (chmod not configured)"
-                )
-            else:
+            if action.chmod:
                 fix_permissions(action.path, action.chmod, action.recursive)
 
         elif action.mode == ActionMode.CHECK:
             if should_change_ownership:
                 fix_ownership(action.path, action.uid, action.gid, action.recursive)
-            if not action.chmod:
-                logger.log(
-                    "⏭️  Permissions will remain unchanged (chmod not configured)"
-                )
-            elif should_change_perms:
+            if should_change_perms:
                 fix_permissions(action.path, action.chmod, action.recursive)
         si = os.stat(action.path)
         final_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
@@ -328,21 +325,25 @@ def apply_action(action: Action) -> Optional[str]:
 
 def main():
     """Main entry point."""
-    start_time = time.time()
     print("🚀 Starting permissions configuration...")
+    start_time = time.time()
+
     actions = load_actions()
     errors = []
+
     for action in actions:
         error = apply_action(action)
         if error:
             errors.append(f"❌ Error applying action [{action.identifier}]: {error}")
         print()
+
     if errors:
         print(f"\n❌ Encountered {len(errors)} errors during execution:")
         for error in errors:
             print(f"  • {error}")
         print("\n💥 Execution failed with errors")
         sys.exit(1)
+
     print(f"\n⏱️  Total time taken: {(time.time() - start_time) * 1000:.2f}ms")
     print("🎉 All permissions configured successfully!")
 
