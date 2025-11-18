@@ -187,7 +187,7 @@ class Logger:
         print(char * MAX_WIDTH)
 
 
-def fix_ownership(path: str, uid: int, gid: int, recursive: bool, logger: Logger):
+def fix_ownership(path: str, uid: int, gid: int, recursive: bool):
     """
     Fix ownership of a path.
 
@@ -196,10 +196,7 @@ def fix_ownership(path: str, uid: int, gid: int, recursive: bool, logger: Logger
         uid: Target user ID
         gid: Target group ID
         recursive: Whether to apply recursively
-        logger: Logger instance
     """
-    recursive_text = " recursively" if recursive else ""
-    logger.log(f"👤 Changing ownership{recursive_text} to [{uid}:{gid}]")
     os.chown(path, uid, gid)
     if recursive:
         for root, dirs, files in os.walk(path):
@@ -207,11 +204,9 @@ def fix_ownership(path: str, uid: int, gid: int, recursive: bool, logger: Logger
                 os.chown(os.path.join(root, d), uid, gid)
             for f in files:
                 os.chown(os.path.join(root, f), uid, gid)
-    si = os.stat(path)
-    logger.log(f"✅ Ownership after changes: [{si.st_uid}:{si.st_gid}]")
 
 
-def fix_permissions(path: str, mode: FileMode, recursive: bool, logger: Logger):
+def fix_permissions(path: str, mode: FileMode, recursive: bool):
     """
     Fix permissions of a path.
 
@@ -219,10 +214,7 @@ def fix_permissions(path: str, mode: FileMode, recursive: bool, logger: Logger):
         path: Path to modify
         mode: Target file mode
         recursive: Whether to apply recursively
-        logger: Logger instance
     """
-    recursive_text = " recursively" if recursive else ""
-    logger.log(f"🔐 Changing permissions{recursive_text} to [{mode}]")
     os.chmod(path, mode.mode)
     if recursive:
         for root, dirs, files in os.walk(path):
@@ -230,9 +222,6 @@ def fix_permissions(path: str, mode: FileMode, recursive: bool, logger: Logger):
                 os.chmod(os.path.join(root, d), mode.mode)
             for f in files:
                 os.chmod(os.path.join(root, f), mode.mode)
-    stat_info = os.stat(path)
-    current_mode = FileMode(f"0{oct(stat_info.st_mode)[-3:]}")
-    logger.log(f"✅ Permissions after changes: [{current_mode}]")
 
 
 def apply_action(action: Action) -> Optional[str]:
@@ -282,40 +271,51 @@ def apply_action(action: Action) -> Optional[str]:
     curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     target_mode = action.chmod if action.chmod else curr_mode
     recursive_indicator = " [recursive]" if action.recursive else ""
-    logger.log(
-        f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator}"
-    )
-    logger.log(f"🔐 Permissions: [{curr_mode}] -> [{target_mode}]")
-    logger.log(f"⚙️  Mode: {action.mode.value}")
+
+    # Determine if changes should be made
+    should_change_ownership = si.st_uid != action.uid or si.st_gid != action.gid
+    should_change_perms = action.chmod and curr_mode.mode != action.chmod.mode
+
+    if action.mode == ActionMode.ALWAYS:
+        # ALWAYS mode applies unconditionally
+        mode_desc = "Always. Applies changes regardless of current state"
+        own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator} [will apply]"
+        perm_log = f"🔐 Permissions: [{curr_mode}] [no change]"
+        if action.chmod:
+            perm_log = f"🔐 Permissions: [{curr_mode}] -> [{target_mode}] [will apply]"
+    elif action.mode == ActionMode.CHECK:
+        mode_desc = "Check. Only applies changes if are incorrect"
+        # CHECK mode only applies if needed
+        own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] [no change]"
+        if should_change_ownership:
+            own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator} [will change]"
+
+        perm_log = f"🔐 Permissions: [{curr_mode}] [no change]"
+        if should_change_perms:
+            perm_log = f"🔐 Permissions: [{curr_mode}] -> [{target_mode}] [will change]"
+
+    logger.log(own_log)
+    logger.log(perm_log)
+    logger.log(f"⚙️  Mode: {mode_desc}")
     try:
         if action.mode == ActionMode.ALWAYS:
-            fix_ownership(action.path, action.uid, action.gid, action.recursive, logger)
+            fix_ownership(action.path, action.uid, action.gid, action.recursive)
             if not action.chmod:
                 logger.log(
                     "⏭️  Permissions will remain unchanged (chmod not configured)"
                 )
             else:
-                fix_permissions(action.path, action.chmod, action.recursive, logger)
+                fix_permissions(action.path, action.chmod, action.recursive)
 
         elif action.mode == ActionMode.CHECK:
-            if si.st_uid != action.uid or si.st_gid != action.gid:
-                logger.log("❌ Ownership is incorrect. Fixing...")
-                fix_ownership(
-                    action.path, action.uid, action.gid, action.recursive, logger
-                )
-            else:
-                logger.log("✅ Ownership is already correct, no changes needed")
+            if should_change_ownership:
+                fix_ownership(action.path, action.uid, action.gid, action.recursive)
             if not action.chmod:
                 logger.log(
                     "⏭️  Permissions will remain unchanged (chmod not configured)"
                 )
-            else:
-                curr_mode_bits = si.st_mode & 0o777
-                if curr_mode_bits != action.chmod.mode:
-                    logger.log("❌ Permissions are incorrect. Fixing...")
-                    fix_permissions(action.path, action.chmod, action.recursive, logger)
-                else:
-                    logger.log("✅ Permissions are already correct, no changes needed")
+            elif should_change_perms:
+                fix_permissions(action.path, action.chmod, action.recursive)
         si = os.stat(action.path)
         final_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
         logger.log(f"📊 Final: 👤 [{si.st_uid}:{si.st_gid}] 🔐 [{final_mode}]")
