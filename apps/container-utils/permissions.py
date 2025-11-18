@@ -107,7 +107,9 @@ class Action:
         try:
             chmod = FileMode(chmod_str)
         except ValueError as e:
-            raise ValueError(f"Invalid chmod in action '{data.get('identifier', 'unknown')}': {e}")
+            raise ValueError(
+                f"Invalid chmod in action '{data.get('identifier', 'unknown')}': {e}"
+            )
 
         return cls(
             identifier=data["identifier"],
