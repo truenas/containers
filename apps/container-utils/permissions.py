@@ -289,7 +289,7 @@ def apply_action(action: Action) -> Optional[str]:
         if action.chmod:
             perm_log = f"🔐 Permissions: [{curr_mode}] -> [{target_mode}] [will apply]"
     elif action.mode == ActionMode.CHECK:
-        mode_desc = "Check. Only applies changes if are incorrect"
+        mode_desc = "Check. Only applies changes if they are incorrect"
         own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] [no change]"
         if should_change_ownership:
             own_log = f"👤 Ownership: [{si.st_uid}:{si.st_gid}] -> [{action.uid}:{action.gid}]{recursive_indicator} [will change]"
