@@ -277,7 +277,6 @@ def apply_action(action: Action) -> Optional[str]:
     curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     logger.log(f"📊 Original: 👤 [{si.st_uid}:{si.st_gid}] 🔐 [{curr_mode}]")
 
-    curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     target_mode = action.chmod if action.chmod else curr_mode
     recursive_indicator = " [recursive]" if action.recursive else ""
 
