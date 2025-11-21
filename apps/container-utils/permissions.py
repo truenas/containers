@@ -249,12 +249,12 @@ def apply_action(action: Action) -> Optional[str]:
         return f"Path does not exist: {action.path}"
 
     if not path.is_dir():
-        logger.log(f"⚠️  Path is not a directory, skipping...")
+        logger.log(f"⚠️ Path is not a directory, skipping...")
         logger.separator("=")
         return None
 
     if action.is_temporary:
-        logger.log("🗑️  Temporary directory - ensuring it is empty...")
+        logger.log("🗑️ Temporary directory - ensuring it is empty...")
         for item in path.iterdir():
             if item.name == SAFE_DIRECTORY_NAME:
                 continue
@@ -269,11 +269,14 @@ def apply_action(action: Action) -> Optional[str]:
                 return f"Failed to delete {item}: {e}"
     else:
         if any(path.iterdir()):
-            logger.log("⏭️  Path is not empty, no changes will be applied")
+            logger.log("⏭️ Path is not empty, no changes will be applied")
             logger.separator("=")
             return None
 
     si = os.stat(action.path)
+    curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
+    logger.log(f"📊 Original: 👤 [{si.st_uid}:{si.st_gid}] 🔐 [{curr_mode}]")
+
     curr_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
     target_mode = action.chmod if action.chmod else curr_mode
     recursive_indicator = " [recursive]" if action.recursive else ""
@@ -300,7 +303,7 @@ def apply_action(action: Action) -> Optional[str]:
 
     logger.log(own_log)
     logger.log(perm_log)
-    logger.log(f"⚙️  Mode: {mode_desc}")
+    logger.log(f"⚙️ Mode: {mode_desc}")
 
     try:
         if action.mode == ActionMode.ALWAYS:
@@ -316,7 +319,7 @@ def apply_action(action: Action) -> Optional[str]:
         si = os.stat(action.path)
         final_mode = FileMode(f"0{oct(si.st_mode)[-3:]}")
         logger.log(f"📊 Final: 👤 [{si.st_uid}:{si.st_gid}] 🔐 [{final_mode}]")
-        logger.log(f"⏱️  Time taken: {(time.time() - start_time) * 1000:.2f}ms")
+        logger.log(f"⏱️ Time taken: {(time.time() - start_time) * 1000:.2f}ms")
         logger.separator("=")
         return None
     except Exception as e:
@@ -344,7 +347,7 @@ def main():
         print("\n💥 Execution failed with errors")
         sys.exit(1)
 
-    print(f"\n⏱️  Total time taken: {(time.time() - start_time) * 1000:.2f}ms")
+    print(f"\n⏱️ Total time taken: {(time.time() - start_time) * 1000:.2f}ms")
     print("🎉 All permissions configured successfully!")
 
 
