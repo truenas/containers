@@ -63,7 +63,7 @@ fi
 
 export PGUSER="$POSTGRES_USER"
 log "Creating new data dir and initializing..."
-PGDATA="$NEW_DATA_DIR" eval "initdb --username=$POSTGRES_USER --pwfile=<(echo $POSTGRES_PASSWORD)"
+PGDATA="$NEW_DATA_DIR" eval "initdb --username=$POSTGRES_USER --pwfile=<(echo $POSTGRES_PASSWORD) $POSTGRES_INITDB_ARGS"
 
 timestamp=$(date +%Y%m%d%H%M%S)
 backup_name="backup-$timestamp-$OLD_VERSION-$TARGET_VERSION.tar.gz"
