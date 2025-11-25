@@ -20,7 +20,7 @@ check_writable() {
   return 0
 }
 
-check_writable "$DATA_DIR" || exit 1
+check_writable "$DATA_DIR" || { echo "Data directory [$DATA_DIR] is not writable"; exit 1; }
 
 # Don't do anything if its a fresh install.
 if [ ! -f "$DATA_DIR/PG_VERSION" ]; then
