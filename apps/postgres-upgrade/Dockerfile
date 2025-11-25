@@ -1,4 +1,4 @@
-FROM postgres:17.7-bookworm
+FROM postgres:18.1-bookworm
 
 RUN apt update
 
@@ -7,7 +7,8 @@ RUN apt install -y --no-install-recommends \
   postgresql-13 \
   postgresql-14 \
   postgresql-15 \
-  postgresql-16
+  postgresql-16 \
+  postgresql-17
 
 RUN apt autoremove -y
 RUN apt autoclean -y
