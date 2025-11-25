@@ -4,8 +4,6 @@ RUN apt update
 
 RUN apt install -y --no-install-recommends \
   rsync \
-  postgresql-13 \
-  postgresql-14 \
   postgresql-15 \
   postgresql-16 \
   postgresql-17
