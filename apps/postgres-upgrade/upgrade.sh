@@ -62,6 +62,7 @@ if [ -d "$NEW_DATA_DIR" ]; then
 fi
 
 export PGUSER="$POSTGRES_USER"
+export POSTGRES_INITDB_ARGS="${POSTGRES_INITDB_ARGS:-}"
 log "Creating new data dir and initializing..."
 PGDATA="$NEW_DATA_DIR" eval "initdb --username=$POSTGRES_USER --pwfile=<(echo $POSTGRES_PASSWORD) $POSTGRES_INITDB_ARGS"
 
