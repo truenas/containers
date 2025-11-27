@@ -52,7 +52,7 @@ check_writable() {
 check_dir_owner_match() {
   local base_dir_owner
   local container_user
-  base_dir_owner=$(stat -c '%U' "$1")
+  base_dir_owner=$(stat -c '%u' "$1")
   container_user=$(id -u)
   if [ "$base_dir_owner" != "$container_user" ]; then
     log "ERROR: Base directory owner [$base_dir_owner] does not match container user [$container_user]"
