@@ -14,4 +14,4 @@ RUN rm -rf /var/lib/apt/lists/*
 COPY upgrade.sh /upgrade.sh
 RUN chmod 777 /upgrade.sh
 
-WORKDIR /tmp
+WORKDIR /var/lib/postgresql

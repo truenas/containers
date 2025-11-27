@@ -86,8 +86,12 @@ migrate_directory_structure() {
   rsync --archive --remove-source-files --exclude="/$old_version" "$old_location/" "$new_location/" || exit 1
 
   dm_log "Cleaning up empty directories from [$old_location]"
-  # Min and Max depth are set to 1 to avoid deleting subdirs of the version directory
-  find "$old_location" -mindepth 1 -maxdepth 1 -type d -empty -delete 2>/dev/null || true
+  # Recursively delete empty directories, but exclude all versioned directories (numeric names)
+  # This handles cases like base/, pg_wal/, etc. that are now empty after rsync
+  find "$old_location" -mindepth 1 -type d -empty \
+    ! -path "$old_location/[0-9]*" \
+    ! -path "$old_location/[0-9]*/*" \
+    -delete 2>/dev/null || true
 
   dm_log "Migration complete. Data now at: [$new_location]"
   return 0
