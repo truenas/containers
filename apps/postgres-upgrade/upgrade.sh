@@ -266,8 +266,7 @@ fi
 check_writable "$BASE_DIR" || exit 1
 check_writable "/var/run/postgresql" || exit 1
 check_dir_owner_match "$BASE_DIR" || exit 1
-local base_dir_owner
-  version directory already exists - fail fast if so
+
 target_version_dir="$BASE_DIR/$TARGET_VERSION/docker"
 if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)" ]; then
   log "ERROR: Target version directory [$target_version_dir] already exists and is not empty."
