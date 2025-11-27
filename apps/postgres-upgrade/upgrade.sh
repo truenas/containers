@@ -265,13 +265,17 @@ fi
 found_version=""
 found_data_dir=""
 highest_version=0
+checked_count=0
 for version_dir in "$BASE_DIR"/*/docker; do
   # Skip if glob didn't match any directories
   [ -e "$version_dir" ] || continue
 
+  checked_count=$((checked_count + 1))
+  log "Checking directory: $version_dir"
+
   if [ -f "$version_dir/PG_VERSION" ]; then
     this_version=$(cat "$version_dir/PG_VERSION")
-    log "Found database: PostgreSQL $this_version at $version_dir"
+    log "  - Found database: PostgreSQL $this_version"
 
     # Track the highest version found
     if [ "$this_version" -gt "$highest_version" ]; then
@@ -279,12 +283,19 @@ for version_dir in "$BASE_DIR"/*/docker; do
       found_version="$this_version"
       found_data_dir="$version_dir"
     fi
+  else
+    log "  - No PG_VERSION file found"
   fi
 done
 
 # Check if we found any database
 if [ -z "$found_version" ]; then
-  log "No existing database found. Assuming this is a fresh install."
+  if [ "$checked_count" -eq 0 ]; then
+    log "No version directories found in $BASE_DIR/*/docker pattern."
+  else
+    log "Checked $checked_count directories but found no valid PostgreSQL databases."
+  fi
+  log "Assuming this is a fresh install."
   exit 0
 fi
 
