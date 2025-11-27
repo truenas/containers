@@ -24,6 +24,10 @@ dm_log() {
   echo "[ix-postgres-directory] - [$(date +'%Y-%m-%d %H:%M:%S')] - $1" >&2
 }
 
+empty_line() {
+  echo ""; echo ""
+}
+
 check_same_filesystem() {
   local old_location="$1"
   local new_location="$2"
@@ -110,6 +114,8 @@ perform_upgrade() {
   local new_bin_path
   new_bin_path=$(get_bin_path "$new_version")
 
+  empty_line
+
   # Verify binaries exist
   if [ ! -f "$old_bin_path/pg_upgrade" ]; then
     up_log "ERROR: Old PostgreSQL [$old_version] binaries not found at [$old_bin_path]"
@@ -120,6 +126,8 @@ perform_upgrade() {
     up_log "ERROR: New PostgreSQL [$new_version] binaries not found at [$new_bin_path]"
     exit 1
   fi
+
+  empty_line
 
   local new_data_dir="$BASE_DIR/$new_version/docker"
 
@@ -156,7 +164,9 @@ perform_upgrade() {
   fi
 
   up_log "Using docker_init_database_dir from upstream entrypoint"
+  empty_line
   docker_init_database_dir
+  empty_line
 
   # Restore original POSTGRES_INITDB_ARGS
   export POSTGRES_INITDB_ARGS="$original_initdb_args"
