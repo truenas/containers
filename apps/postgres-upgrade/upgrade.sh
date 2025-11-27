@@ -259,6 +259,9 @@ found_version=""
 found_data_dir=""
 highest_version=0
 for version_dir in "$BASE_DIR"/*/docker; do
+  # Skip if glob didn't match any directories
+  [ -e "$version_dir" ] || continue
+
   if [ -f "$version_dir/PG_VERSION" ]; then
     this_version=$(cat "$version_dir/PG_VERSION")
     log "Found database: PostgreSQL $this_version at $version_dir"
