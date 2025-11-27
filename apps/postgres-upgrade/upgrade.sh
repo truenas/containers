@@ -33,7 +33,7 @@ check_same_filesystem() {
   local new_location="$2"
 
   if [ "$(stat -c '%d' "$old_location")" != "$(stat -c '%d' "$new_location")" ]; then
-    log "Error: Old location [$old_location] and new location [$new_location] are on different filesystems."
+    log "ERROR: Old location [$old_location] and new location [$new_location] are on different filesystems."
     return 1
   fi
   return 0
@@ -42,7 +42,7 @@ check_same_filesystem() {
 check_writable() {
   local path=$1
   if [ ! -w "$path" ]; then
-    log "Error: Not writable path [$path]"
+    log "ERROR: Not writable path [$path]"
     return 1
   fi
 
