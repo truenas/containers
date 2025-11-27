@@ -72,6 +72,7 @@ class Action:
     identifier: str
     path: str
     is_temporary: bool
+    force: bool
     read_only: bool
     mode: ActionMode
     uid: int
@@ -115,6 +116,7 @@ class Action:
             identifier=data["identifier"],
             path=data["mount_path"],
             is_temporary=data.get("is_temporary", False),
+            force=data.get("force", False),
             read_only=data.get("read_only", False),
             mode=mode,
             uid=data.get("uid", 0),
@@ -267,6 +269,9 @@ def apply_action(action: Action) -> Optional[str]:
                 logger.log(f"❌ Error deleting {item}: {e}")
                 logger.separator("=")
                 return f"Failed to delete {item}: {e}"
+    elif action.force:
+        logger.log("🔄 Force flag is set - applying changes...")
+        logger.separator("=")
     else:
         if any(path.iterdir()):
             logger.log("⏭️ Path is not empty, no changes will be applied")
