@@ -231,6 +231,7 @@ if [ "$PGDATA" != "$correct_pg_data" ]; then
 fi
 
 check_writable "$BASE_DIR" || exit 1
+check_writable "/var/run/postgresql" || exit 1
 
 # Check if we need to do directory migration first
 if old_location=$(detect_old_data_location); then
