@@ -181,6 +181,13 @@ perform_upgrade() {
   up_log "Creating backup: $backup_file"
   tar -czf "$backup_file" -C "$(dirname "$old_data_dir")" "$(basename "$old_data_dir")"
 
+  # Try to set restrictive permissions on backup to protect sensitive data
+  if chmod 600 "$backup_file"; then
+    up_log "Backup secured with 600 permissions"
+  else
+    up_log "WARNING: Failed to set permissions on backup file [$backup_file]"
+  fi
+
   # Compatibility check
   up_log "Running compatibility check..."
   if ! "$new_bin_path"/pg_upgrade \
