@@ -7,7 +7,6 @@ RUN apt-get install -y --no-install-recommends \
   postgresql-16 \
   postgresql-17
 
-
 RUN apt-get autoremove -y
 RUN apt-get autoclean -y
 RUN rm -rf /var/lib/apt/lists/*
