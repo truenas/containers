@@ -50,9 +50,10 @@ check_writable() {
 }
 
 check_dir_owner_match() {
-  # base dir owner must match the user running the container
-  local base_dir_owner=$(stat -c '%U' "$1")
-  local container_user=$(id -u)
+  local base_dir_owner
+  local container_user
+  base_dir_owner=$(stat -c '%U' "$1")
+  container_user=$(id -u)
   if [ "$base_dir_owner" != "$container_user" ]; then
     log "ERROR: Base directory owner [$base_dir_owner] does not match container user [$container_user]"
     return 1
@@ -265,8 +266,8 @@ fi
 check_writable "$BASE_DIR" || exit 1
 check_writable "/var/run/postgresql" || exit 1
 check_dir_owner_match "$BASE_DIR" || exit 1
-
-# Check if target version directory already exists - fail fast if so
+local base_dir_owner
+  version directory already exists - fail fast if so
 target_version_dir="$BASE_DIR/$TARGET_VERSION/docker"
 if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)" ]; then
   log "ERROR: Target version directory [$target_version_dir] already exists and is not empty."
