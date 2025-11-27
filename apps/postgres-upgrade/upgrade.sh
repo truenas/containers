@@ -250,6 +250,14 @@ fi
 check_writable "$BASE_DIR" || exit 1
 check_writable "/var/run/postgresql" || exit 1
 
+# Check if target version directory already exists - fail fast if so
+target_version_dir="$BASE_DIR/$TARGET_VERSION/docker"
+if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)" ]; then
+  log "ERROR: Target version directory [$target_version_dir] already exists and is not empty."
+  log "Cannot proceed with upgrade. Please investigate and remove/rename the existing directory."
+  exit 1
+fi
+
 # Check if we need to do directory migration first
 if old_location=$(detect_old_data_location); then
   log "Old directory structure detected, performing migration"
