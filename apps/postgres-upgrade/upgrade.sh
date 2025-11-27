@@ -183,16 +183,14 @@ perform_upgrade() {
 
   # Compatibility check
   up_log "Running compatibility check..."
-  "$new_bin_path"/pg_upgrade \
+  if ! "$new_bin_path"/pg_upgrade \
     --old-bindir="$old_bin_path" \
     --new-bindir="$new_bin_path" \
     --old-datadir="$old_data_dir" \
     --new-datadir="$new_data_dir" \
     --socketdir=/var/run/postgresql \
     --link \
-    --check
-
-  if [ $? -ne 0 ]; then
+    --check; then
     up_log "ERROR: Compatibility check failed"
     exit 1
   fi
@@ -201,15 +199,13 @@ perform_upgrade() {
 
   # Perform actual upgrade
   up_log "Performing upgrade..."
-  "$new_bin_path"/pg_upgrade \
+  if ! "$new_bin_path"/pg_upgrade \
     --old-bindir="$old_bin_path" \
     --new-bindir="$new_bin_path" \
     --old-datadir="$old_data_dir" \
     --new-datadir="$new_data_dir" \
     --socketdir=/var/run/postgresql \
-    --link
-
-  if [ $? -ne 0 ]; then
+    --link; then
     up_log "ERROR: Upgrade failed"
     exit 1
   fi
