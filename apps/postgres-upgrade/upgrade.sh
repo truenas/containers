@@ -219,14 +219,18 @@ perform_upgrade() {
 
   up_log "Upgrade completed successfully"
 
-  # Copy important config files
-  up_log "Copying configuration files..."
-  for conf_file in pg_hba.conf postgresql.conf pg_ident.conf; do
-    if [ -f "$old_data_dir/$conf_file" ]; then
-      cp "$old_data_dir/$conf_file" "$new_data_dir/$conf_file"
-      up_log "Copied $conf_file"
-    fi
-  done
+  # Copy pg_hba.conf (authentication rules - safe to copy between versions)
+  if [ -f "$old_data_dir/pg_hba.conf" ]; then
+    cp "$old_data_dir/pg_hba.conf" "$new_data_dir/pg_hba.conf"
+    up_log "Copied [$old_data_dir/pg_hba.conf] to [$new_data_dir/pg_hba.conf]"
+  fi
+
+  # Note: postgresql.conf is NOT copied automatically as it may contain
+  # version-specific settings. Review and merge manually if needed.
+  if [ -f "$old_data_dir/postgresql.conf" ]; then
+    up_log "NOTE: Old postgresql.conf available at $old_data_dir/postgresql.conf"
+    up_log "      Review and merge settings manually if needed. (Only if you made custom changes)"
+  fi
 
   up_log "Upgrade process complete"
   up_log "Old data preserved at: $old_data_dir"
