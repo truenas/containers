@@ -150,10 +150,10 @@ perform_upgrade() {
 
   # Initialize new data directory
   up_log "Initializing new data directory: $new_data_dir"
-  mkdir -p "$new_data_dir" || {
+  if ! mkdir -p "$new_data_dir" ; then
     up_log "ERROR: Failed to create new data directory [$new_data_dir]"
     exit 1
-  }
+  fi
 
   export PGUSER="$POSTGRES_USER"
   export PGDATA="$new_data_dir"
@@ -278,10 +278,10 @@ fi
 # Check if we need to do directory migration first
 if old_location=$(detect_old_data_location); then
   log "Old directory structure detected, performing migration"
-  migrate_directory_structure "$old_location" || {
+  if ! migrate_directory_structure "$old_location"; then
     log "ERROR: Migration failed"
     exit 1
-  }
+  fi
 else
   log "No migration needed from old data location."
 fi
