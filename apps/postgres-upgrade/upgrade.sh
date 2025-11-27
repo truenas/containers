@@ -87,10 +87,10 @@ migrate_directory_structure() {
   fi
 
   # Create parent directory
-  mkdir -p "$new_location" || {
+  if ! mkdir -p "$new_location"; then
     dm_log "ERROR: Failed to create parent directory [$new_location]"
     exit 1
-  }
+  fi
 
   # Ensure both locations are on the same filesystem
   check_same_filesystem "$old_location" "$new_location" || exit 1
