@@ -44,7 +44,8 @@ resolve_timezone() {
 
   # If it's a symlink (legacy), resolve it to canonical
   if [ -L "$tz_path" ]; then
-    local target=$(readlink -f "$tz_path")
+    local target
+    target=$(readlink -f "$tz_path")
     echo "${target#/usr/share/zoneinfo/}"
   else
     # Already canonical
@@ -57,14 +58,16 @@ migrate_timezone_parameter() {
   local param_name="$2"
 
   # Extract current value from postgresql.conf
-  local current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
+  local current_tz
+  current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
 
   if [ -z "$current_tz" ]; then
     log "No [${param_name}] found in config"
     return 0
   fi
 
-  local canonical_tz=$(resolve_timezone "$current_tz")
+  local canonical_tz
+  canonical_tz=$(resolve_timezone "$current_tz")
 
   if [ "$current_tz" != "$canonical_tz" ]; then
     log "Migrating parameter [${param_name}] from [${current_tz}] -> [${canonical_tz}]"
