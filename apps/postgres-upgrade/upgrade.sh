@@ -61,8 +61,11 @@ run_post_upgrade_scripts() {
       up_log "Executing $sql_file..."
       if psql --username "$POSTGRES_USER" --dbname postgres --file "$sql_file"; then
         up_log "Successfully executed $sql_file"
+        # Delete the script after successful execution
+        rm -f "$sql_file"
+        up_log "Deleted $sql_file after successful execution"
       else
-        up_log "WARNING: Failed to execute $sql_file"
+        up_log "WARNING: Failed to execute $sql_file (keeping file for manual review)"
       fi
     fi
   done
