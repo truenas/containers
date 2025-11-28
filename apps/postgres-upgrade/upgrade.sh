@@ -33,6 +33,7 @@ get_data_size() {
   du -sh "$path" 2>/dev/null | cut -f1
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 resolve_timezone() {
   local tz="$1"
   local tz_path="/usr/share/zoneinfo/${tz}"
@@ -53,6 +54,7 @@ resolve_timezone() {
   fi
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 migrate_timezone_parameter() {
   local pgconf="$1"
   local param_name="$2"
@@ -77,6 +79,7 @@ migrate_timezone_parameter() {
   fi
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 migrate_timezones() {
   local data_dir="$1"
   local pgconf="$data_dir/postgresql.conf"
@@ -182,6 +185,7 @@ check_dir_owner_match() {
   return 0
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Check if data exists in old structure and needs migration
 detect_old_data_location() {
   if [ -f "$BASE_DIR/PG_VERSION" ]; then
@@ -191,6 +195,7 @@ detect_old_data_location() {
   return 1
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Migrate from old directory structure to new versioned structure
 migrate_directory_structure() {
   local old_location="$1"
@@ -447,6 +452,7 @@ if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)
   exit 0
 fi
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Check if we need to do directory migration first
 if old_location=$(detect_old_data_location); then
   log "Old directory structure detected, performing migration"
@@ -501,6 +507,7 @@ log "Using highest version found: PostgreSQL [$found_version] at [$found_data_di
 # Use the found data directory
 DATA_DIR="$found_data_dir"
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Migrate timezones before checking versions
 if ! migrate_timezones "$DATA_DIR"; then
   log "ERROR: Timezone migration failed"
