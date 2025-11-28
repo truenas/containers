@@ -87,6 +87,7 @@ run_post_upgrade_tasks() {
   unset PGPASSWORD
 
   up_log "Post-upgrade tasks completed"
+  return 0
 }
 
 check_same_filesystem() {
@@ -144,17 +145,17 @@ migrate_directory_structure() {
 
   if [ -d "$new_location" ] && [ "$(ls -A "$new_location")" ]; then
     dm_log "ERROR: Target location [$new_location] already exists and is not empty."
-    exit 1
+    return 1
   fi
 
   # Create parent directory
   if ! mkdir -p "$new_location"; then
     dm_log "ERROR: Failed to create parent directory [$new_location]"
-    exit 1
+    return 1
   fi
 
   # Ensure both locations are on the same filesystem
-  check_same_filesystem "$old_location" "$new_location" || exit 1
+  check_same_filesystem "$old_location" "$new_location" || return 1
 
   # Use rsync to copy everything, preserving permissions
   local data_size
@@ -163,7 +164,7 @@ migrate_directory_structure() {
   dm_log "This may take a while depending on database size..."
   # Use rsync to copy everything (including empty directories), except the newly created version directory
   # --archive preserves permissions, --remove-source-files deletes files after copy
-  rsync --archive --remove-source-files --exclude="/$old_version" "$old_location/" "$new_location/" || exit 1
+  rsync --archive --remove-source-files --exclude="/$old_version" "$old_location/" "$new_location/" || return 1
 
   dm_log "Cleaning up empty directories from [$old_location]"
   # Recursively delete empty directories, but exclude all versioned directories (numeric names)
@@ -195,12 +196,12 @@ perform_upgrade() {
   # Verify binaries exist
   if [ ! -f "$old_bin_path/pg_upgrade" ]; then
     up_log "ERROR: Old PostgreSQL [$old_version] binaries not found at [$old_bin_path]"
-    exit 1
+    return 1
   fi
 
   if [ ! -f "$new_bin_path/pg_upgrade" ]; then
     up_log "ERROR: New PostgreSQL [$new_version] binaries not found at [$new_bin_path]"
-    exit 1
+    return 1
   fi
 
   empty_line
@@ -209,14 +210,14 @@ perform_upgrade() {
 
   if [ -d "$new_data_dir" ]; then
     up_log "ERROR: Directory [$new_data_dir] already exists."
-    exit 1
+    return 1
   fi
 
   # Initialize new data directory
   up_log "Initializing new data directory: $new_data_dir"
   if ! mkdir -p "$new_data_dir" ; then
     up_log "ERROR: Failed to create new data directory [$new_data_dir]"
-    exit 1
+    return 1
   fi
 
   export PGUSER="$POSTGRES_USER"
@@ -251,7 +252,10 @@ perform_upgrade() {
   local timestamp
   timestamp=$(date +%Y%m%d%H%M%S)
   local backup_dir="$BASE_DIR/backups"
-  mkdir -p "$backup_dir"
+  if ! mkdir -p "$backup_dir"; then
+    up_log "ERROR: Failed to create backup directory [$backup_dir]"
+    return 1
+  fi
 
   local backup_file="$backup_dir/pre-upgrade-${old_version}-to-${new_version}-${timestamp}.tar.zst"
   local backup_data_size
@@ -278,7 +282,7 @@ perform_upgrade() {
     --link \
     --check; then
     up_log "ERROR: Compatibility check failed"
-    exit 1
+    return 1
   fi
 
   up_log "Compatibility check passed"
@@ -287,11 +291,11 @@ perform_upgrade() {
   local upgrade_work_dir="$BASE_DIR/pg_upgrade_work"
   if ! mkdir -p "$upgrade_work_dir"; then
     up_log "ERROR: Failed to create pg_upgrade work directory [$upgrade_work_dir]"
-    exit 1
+    return 1
   fi
   if ! cd "$upgrade_work_dir"; then
     up_log "ERROR: Failed to change to pg_upgrade work directory [$upgrade_work_dir]"
-    exit 1
+    return 1
   fi
 
   # Perform actual upgrade
@@ -305,7 +309,7 @@ perform_upgrade() {
     --socketdir=/var/run/postgresql \
     --link; then
     up_log "ERROR: Upgrade failed"
-    exit 1
+    return 1
   fi
 
   up_log "Upgrade completed successfully"
@@ -315,7 +319,10 @@ perform_upgrade() {
   sql_files=$(find . -maxdepth 1 -name "*.sql" -type f 2>/dev/null || true)
 
   # Run post-upgrade SQL scripts if any were generated
-  run_post_upgrade_tasks "$new_data_dir" "$sql_files"
+  if ! run_post_upgrade_tasks "$new_data_dir" "$sql_files"; then
+    up_log "ERROR: Post-upgrade tasks failed"
+    return 1
+  fi
 
   # Copy pg_hba.conf (authentication rules - safe to copy between versions)
   if [ -f "$old_data_dir/pg_hba.conf" ]; then
@@ -334,6 +341,7 @@ perform_upgrade() {
   up_log "Old data preserved at: $old_data_dir"
   up_log "New data location: $new_data_dir"
   up_log "Backup available at: $backup_file"
+  return 0
 }
 
 log "Starting entrypoint with migration and upgrade handling"
@@ -444,7 +452,10 @@ if [ "$OLD_VERSION" -gt "$TARGET_VERSION" ]; then
   exit 1
 fi
 
-perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"
+if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
+  log "ERROR: Upgrade failed"
+  exit 1
+fi
 
 log "Upgrade complete. New database available at: $BASE_DIR/$TARGET_VERSION/docker"
 log "Done."
