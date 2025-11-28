@@ -3,6 +3,7 @@ FROM postgres:18.1-bookworm
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   rsync \
+  zstd \
   postgresql-15 \
   postgresql-16 \
   postgresql-17
