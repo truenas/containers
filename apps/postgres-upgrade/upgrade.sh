@@ -33,6 +33,62 @@ get_data_size() {
   du -sh "$path" 2>/dev/null | cut -f1
 }
 
+resolve_timezone() {
+  local tz="$1"
+  local tz_path="/usr/share/zoneinfo/${tz}"
+
+  if [ ! -e "$tz_path" ]; then
+    log "ERROR: Timezone ${tz} not found"
+    return 1
+  fi
+
+  # If it's a symlink (legacy), resolve it to canonical
+  if [ -L "$tz_path" ]; then
+    local target=$(readlink -f "$tz_path")
+    echo "${target#/usr/share/zoneinfo/}"
+  else
+    # Already canonical
+    echo "$tz"
+  fi
+}
+
+migrate_timezone_parameter() {
+  local pgconf="$1"
+  local param_name="$2"
+
+  # Extract current value from postgresql.conf
+  local current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
+
+  if [ -z "$current_tz" ]; then
+    log "No [${param_name}] found in config"
+    return 0
+  fi
+
+  local canonical_tz=$(resolve_timezone "$current_tz")
+
+  if [ "$current_tz" != "$canonical_tz" ]; then
+    log "Migrating parameter [${param_name}] from [${current_tz}] -> [${canonical_tz}]"
+    sed -i "s|^${param_name}\s*=\s*'${current_tz}'.*|${param_name} = '${canonical_tz}'|g" "$pgconf"
+  else
+    log "Parameter [${param_name}] is already canonical - [${current_tz}]"
+  fi
+}
+
+migrate_timezones() {
+  local data_dir="$1"
+  local pgconf="$data_dir/postgresql.conf"
+
+  if [ ! -f "$pgconf" ]; then
+    log "No postgresql.conf found at $pgconf, skipping timezone migration"
+    return 0
+  fi
+
+  log "Starting timezone migration for $data_dir"
+  migrate_timezone_parameter "$pgconf" "timezone"
+  migrate_timezone_parameter "$pgconf" "log_timezone"
+  log "Timezone migration complete"
+}
+
 run_post_upgrade_tasks() {
   local data_dir="$1"
   local sql_files="$2"
@@ -441,6 +497,12 @@ log "Using highest version found: PostgreSQL [$found_version] at [$found_data_di
 
 # Use the found data directory
 DATA_DIR="$found_data_dir"
+
+# Migrate timezones before checking versions
+if ! migrate_timezones "$DATA_DIR"; then
+  log "ERROR: Timezone migration failed"
+  exit 1
+fi
 
 OLD_VERSION=$(cat "$DATA_DIR/PG_VERSION")
 log "Current version: $OLD_VERSION"
