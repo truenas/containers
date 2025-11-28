@@ -248,7 +248,7 @@ perform_upgrade() {
   local old_version="$2"
   local new_version="$3"
 
-  up_log "Starting upgrade from PostgreSQL $old_version to $new_version"
+  up_log "Starting upgrade from PostgreSQL [$old_version] to [$new_version]"
 
   local old_bin_path
   old_bin_path=$(get_bin_path "$old_version")
@@ -527,6 +527,17 @@ fi
 # Fail if we're downgrading.
 if [ "$OLD_VERSION" -gt "$TARGET_VERSION" ]; then
   log "Cannot downgrade from $OLD_VERSION to $TARGET_VERSION"
+  exit 1
+fi
+
+# We should upgrade now, however we should only allow to upgrade to 18.
+# ie. 15 -> 18, 16 -> 18, 17 -> 18
+# This is because only 18 is set to use trixie, which is what this postgres-upgrade container is based on.
+# So the collation will match. Otherwise users will see a ton of collation mismatch warnings in the logs,
+# and will have to manually fix them.
+if [ "$TARGET_VERSION" -ne 18 ]; then
+  log "ERROR: Upgrades are only supported to PostgreSQL 18 in this container."
+  log "Please set TARGET_VERSION=18 to proceed with the upgrade."
   exit 1
 fi
 
