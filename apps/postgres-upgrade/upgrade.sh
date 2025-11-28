@@ -45,9 +45,9 @@ run_post_upgrade_tasks() {
   # Start temporary server
   docker_temp_server_start postgres
 
-  # Refresh collations in all databases
+  # Refresh collations in all databases (including template1, but not template0)
   up_log "Refreshing collations in all databases..."
-  psql --username "$POSTGRES_USER" --dbname postgres --tuples-only --no-align --command "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate;" | while read -r dbname; do
+  psql --username "$POSTGRES_USER" --dbname postgres --tuples-only --no-align --command "SELECT datname FROM pg_database WHERE datallowconn;" | while read -r dbname; do
     if [ -n "$dbname" ]; then
       up_log "Refreshing collations in database [$dbname]"
       if psql --username "$POSTGRES_USER" --dbname "$dbname" --command "ALTER DATABASE \"$dbname\" REFRESH COLLATION VERSION;"; then
