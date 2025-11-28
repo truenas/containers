@@ -267,12 +267,25 @@ check_writable "$BASE_DIR" || exit 1
 check_writable "/var/run/postgresql" || exit 1
 check_dir_owner_match "$BASE_DIR" || exit 1
 
-# Check if target version directory already exists - fail fast if so
 target_version_dir="$BASE_DIR/$TARGET_VERSION/docker"
 if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)" ]; then
-  log "ERROR: Target version directory [$target_version_dir] already exists and is not empty."
-  log "Cannot proceed with upgrade. Please investigate and remove/rename the existing directory."
-  exit 1
+  # Directory exists and is not empty - check if it's a valid completed upgrade
+  if [ -f "$target_version_dir/PG_VERSION" ]; then
+    existing_version=$(cat "$target_version_dir/PG_VERSION")
+    if [ "$existing_version" = "$TARGET_VERSION" ]; then
+      log "Target version directory already exists with correct version [$TARGET_VERSION]. Upgrade already completed."
+      log "Exiting successfully."
+      exit 0
+    else
+      log "ERROR: Target version directory [$target_version_dir] exists with wrong version [$existing_version], expected [$TARGET_VERSION]."
+      log "Cannot proceed with upgrade. Please investigate and remove/rename the existing directory."
+      exit 1
+    fi
+  else
+    log "ERROR: Target version directory [$target_version_dir] already exists and is not empty, but PG_VERSION file not found."
+    log "This may indicate a partial/failed upgrade. Please investigate and remove/rename the existing directory."
+    exit 1
+  fi
 fi
 
 # Check if we need to do directory migration first
