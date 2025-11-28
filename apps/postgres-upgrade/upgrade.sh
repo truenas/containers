@@ -313,8 +313,10 @@ perform_upgrade() {
     --socketdir=/var/run/postgresql \
     --link; then
     up_log "ERROR: Upgrade failed"
-    up_log "Cleaning up new data directory: $new_data_dir"
-    rm -rf "$new_data_dir"
+    up_log "Cleaning up new data directory [$new_data_dir]"
+    if ! rm -rf "$new_data_dir"; then
+      up_log "WARNING: Failed to remove new data directory [$new_data_dir] after failed upgrade"
+    fi
     return 1
   fi
 
