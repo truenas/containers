@@ -28,6 +28,11 @@ empty_line() {
   echo ""; echo ""
 }
 
+get_data_size() {
+  local path=$1
+  du -sh "$path" 2>/dev/null | cut -f1
+}
+
 check_same_filesystem() {
   local old_location="$1"
   local new_location="$2"
@@ -96,7 +101,9 @@ migrate_directory_structure() {
   check_same_filesystem "$old_location" "$new_location" || exit 1
 
   # Use rsync to copy everything, preserving permissions
-  dm_log "Moving data from [$old_location] to [$new_location] with rsync"
+  local data_size
+  data_size=$(get_data_size "$old_location")
+  dm_log "Moving data from [$old_location] to [$new_location] with rsync (${data_size})"
   # Use rsync to copy everything (including empty directories), except the newly created version directory
   # --archive preserves permissions, --remove-source-files deletes files after copy
   rsync --archive --remove-source-files --exclude="/$old_version" "$old_location/" "$new_location/" || exit 1
@@ -190,7 +197,9 @@ perform_upgrade() {
   mkdir -p "$backup_dir"
 
   local backup_file="$backup_dir/pre-upgrade-${old_version}-to-${new_version}-${timestamp}.tar.gz"
-  up_log "Creating backup: $backup_file"
+  local backup_data_size
+  backup_data_size=$(get_data_size "$old_data_dir")
+  up_log "Creating backup: $backup_file (${backup_data_size})"
   tar -czf "$backup_file" -C "$(dirname "$old_data_dir")" "$(basename "$old_data_dir")"
 
   # Try to set restrictive permissions on backup to protect sensitive data
