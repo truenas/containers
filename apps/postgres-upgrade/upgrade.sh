@@ -61,7 +61,7 @@ migrate_timezone_parameter() {
 
   # Extract current value from postgresql.conf
   local current_tz
-  current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
+  current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | tail -n 1 | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
 
   if [ -z "$current_tz" ]; then
     log "No [${param_name}] found in config"
