@@ -69,7 +69,10 @@ migrate_timezone_parameter() {
   fi
 
   local canonical_tz
-  canonical_tz=$(resolve_timezone "$current_tz")
+  if ! canonical_tz=$(resolve_timezone "$current_tz"); then
+    log "ERROR: Failed to resolve timezone [$current_tz]"
+    return 1
+  fi
 
   if [ "$current_tz" != "$canonical_tz" ]; then
     log "Migrating parameter [${param_name}] from [${current_tz}] -> [${canonical_tz}]"
