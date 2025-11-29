@@ -415,9 +415,9 @@ perform_upgrade() {
   fi
 
   up_log "Upgrade process complete"
-  up_log "Old data preserved at: $old_data_dir"
-  up_log "New data location: $new_data_dir"
-  up_log "Backup available at: $backup_file"
+  up_log "Old data preserved at [$old_data_dir]"
+  up_log "New data location at [$new_data_dir]"
+  up_log "Backup available at [$backup_file]"
   return 0
 }
 
@@ -481,11 +481,11 @@ for version_dir in "$BASE_DIR"/*/docker; do
   [ -e "$version_dir" ] || continue
 
   checked_count=$((checked_count + 1))
-  log "Checking directory: $version_dir"
+  log "Checking directory [$version_dir]"
 
   if [ -f "$version_dir/PG_VERSION" ]; then
     this_version=$(cat "$version_dir/PG_VERSION")
-    log "  - Found database: PostgreSQL $this_version"
+    log "  - Found database: PostgreSQL [$this_version]"
 
     # Track the highest version found
     if [ "$this_version" -gt "$highest_version" ]; then
@@ -501,9 +501,9 @@ done
 # Check if we found any database
 if [ -z "$found_version" ]; then
   if [ "$checked_count" -eq 0 ]; then
-    log "No version directories found in $BASE_DIR/*/docker pattern."
+    log "No version directories found in [$BASE_DIR/*/docker] pattern."
   else
-    log "Checked $checked_count directories but found no valid PostgreSQL databases."
+    log "Checked [$checked_count] directories but found no valid PostgreSQL databases."
   fi
   log "Assuming this is a fresh install."
   exit 0
@@ -542,5 +542,14 @@ if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
   exit 1
 fi
 
-log "Upgrade complete. New database available at: $BASE_DIR/$TARGET_VERSION/docker"
+# TODO: Remove once postgres 17 is removed from Apps
+# Migrate timezones before checking versions
+# We do this once more, as the perform_upgrade initializes a new DB,
+# which will use the TZ to set the timezone of the new DB
+if ! migrate_timezones "$BASE_DIR/$TARGET_VERSION/docker"; then
+  log "ERROR: Timezone migration failed"
+  exit 1
+fi
+
+log "Upgrade complete. New database available at [$BASE_DIR/$TARGET_VERSION/docker]"
 log "Done."
