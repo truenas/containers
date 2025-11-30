@@ -36,13 +36,17 @@ get_data_size() {
 run_post_upgrade_tasks() {
   local data_dir="$1"
   local sql_files="$2"
+  local bin_path="$3"
 
   up_log "Starting temporary PostgreSQL server to run post-upgrade tasks..."
 
   export PGPASSWORD="${PGPASSWORD:-$POSTGRES_PASSWORD}"
   export PGDATA="$data_dir"
 
-  # Start temporary server
+  # Start temporary server with the correct PostgreSQL version
+  local original_path="$PATH"
+  export PATH="$bin_path:$PATH"
+  up_log "Using pg_ctl from [$(which pg_ctl)]"
   docker_temp_server_start postgres
 
   # Refresh collations in all databases (including template1, but not template0)
@@ -84,6 +88,7 @@ run_post_upgrade_tasks() {
 
   # Stop temporary server
   docker_temp_server_stop
+  export PATH="$original_path"
   unset PGPASSWORD
 
   up_log "Post-upgrade tasks completed"
@@ -240,9 +245,15 @@ perform_upgrade() {
     export POSTGRES_INITDB_ARGS="${original_initdb_args} --no-data-checksums"
   fi
 
-  up_log "Using docker_init_database_dir from upstream entrypoint"
+  up_log "Using docker_init_database_dir from upstream entrypoint with PostgreSQL [$new_version] binaries"
   empty_line
+  # Temporarily prepend the target version's bin directory to PATH
+  # This ensures docker_init_database_dir uses the correct version's initdb
+  local original_path="$PATH"
+  export PATH="$new_bin_path:$PATH"
+  up_log "Using initdb from [$(which initdb)]"
   docker_init_database_dir
+  export PATH="$original_path"
   empty_line
 
   # Restore original POSTGRES_INITDB_ARGS
@@ -319,7 +330,7 @@ perform_upgrade() {
   sql_files=$(find . -maxdepth 1 -name "*.sql" -type f 2>/dev/null || true)
 
   # Run post-upgrade SQL scripts if any were generated
-  if ! run_post_upgrade_tasks "$new_data_dir" "$sql_files"; then
+  if ! run_post_upgrade_tasks "$new_data_dir" "$sql_files" "$new_bin_path"; then
     up_log "ERROR: Post-upgrade tasks failed"
     return 1
   fi
