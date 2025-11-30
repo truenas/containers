@@ -311,9 +311,17 @@ perform_upgrade() {
   # Add checksum flag to POSTGRES_INITDB_ARGS
   local original_initdb_args="${POSTGRES_INITDB_ARGS:-}"
   if [ "$old_checksums_enabled" = true ]; then
+    # --data-checksums is available in all versions (since PostgreSQL 9.3)
     export POSTGRES_INITDB_ARGS="${original_initdb_args} --data-checksums"
   else
-    export POSTGRES_INITDB_ARGS="${original_initdb_args} --no-data-checksums"
+    # --no-data-checksums flag only exists in PostgreSQL 18+
+    # For older versions, omitting the flag defaults to disabled checksums
+    # TODO: Remove once postgres 17 is removed from Apps
+    if [ "$new_version" -gt 17 ]; then
+      export POSTGRES_INITDB_ARGS="${original_initdb_args} --no-data-checksums"
+    else
+      export POSTGRES_INITDB_ARGS="${original_initdb_args}"
+    fi
   fi
 
   up_log "Using docker_init_database_dir from upstream entrypoint with PostgreSQL [$new_version] binaries"
