@@ -104,8 +104,8 @@ migrate_timezones() {
 
 run_post_upgrade_tasks() {
   local data_dir="$1"
-  local sql_files="$2"
-  local bin_path="$3"
+  local bin_path="$2"
+  local sql_files="$3"
 
   up_log "Starting temporary PostgreSQL server to run post-upgrade tasks..."
 
@@ -417,7 +417,7 @@ perform_upgrade() {
   sql_files=$(find . -maxdepth 1 -name "*.sql" -type f 2>/dev/null || true)
 
   # Run post-upgrade SQL scripts if any were generated
-  if ! run_post_upgrade_tasks "$new_data_dir" "$sql_files" "$new_bin_path"; then
+  if ! run_post_upgrade_tasks "$new_data_dir" "$new_bin_path" "$sql_files"; then
     up_log "ERROR: Post-upgrade tasks failed"
     return 1
   fi
