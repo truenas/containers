@@ -564,7 +564,7 @@ if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
 fi
 
 # TODO: Remove once postgres 17 is removed from Apps
-# Migrate timezones before checking versions
+# Migrate timezones in the new database directory after upgrade
 # We do this once more, as the perform_upgrade initializes a new DB,
 # which will use the TZ to set the timezone of the new DB
 if ! migrate_timezones "$BASE_DIR/$TARGET_VERSION/docker"; then
