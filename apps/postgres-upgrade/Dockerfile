@@ -7,9 +7,7 @@ RUN apt-get install -y --no-install-recommends \
   tzdata-legacy \
   postgresql-15 \
   postgresql-16 \
-  postgresql-17 \
-  postgresql-17-postgis-3 \
-  postgresql-18-postgis-3
+  postgresql-17
 
 RUN apt-get autoremove -y
 RUN apt-get autoclean -y
