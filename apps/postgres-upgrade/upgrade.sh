@@ -33,16 +33,89 @@ get_data_size() {
   du -sh "$path" 2>/dev/null | cut -f1
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
+resolve_timezone() {
+  local tz="$1"
+  local tz_path="/usr/share/zoneinfo/${tz}"
+
+  if [ ! -e "$tz_path" ]; then
+    log "ERROR: Timezone ${tz} not found"
+    return 1
+  fi
+
+  # If it's a symlink (legacy), resolve it to canonical
+  if [ -L "$tz_path" ]; then
+    local target
+    target=$(readlink -f "$tz_path")
+    echo "${target#/usr/share/zoneinfo/}"
+  else
+    # Already canonical
+    echo "$tz"
+  fi
+}
+
+# TODO: Remove once postgres 17 is removed from Apps
+migrate_timezone_parameter() {
+  local pgconf="$1"
+  local param_name="$2"
+
+  # Extract current value from postgresql.conf
+  local current_tz
+  current_tz=$(grep -E "^${param_name}\s*=" "$pgconf" | tail -n 1 | sed -E "s|^${param_name}\s*=\s*'([^']+)'.*|\1|")
+
+  if [ -z "$current_tz" ]; then
+    log "No [${param_name}] found in config"
+    return 0
+  fi
+
+  local canonical_tz
+  if ! canonical_tz=$(resolve_timezone "$current_tz"); then
+    log "ERROR: Failed to resolve timezone [$current_tz]"
+    return 1
+  fi
+
+  if [ "$current_tz" != "$canonical_tz" ]; then
+    log "Migrating parameter [${param_name}] from [${current_tz}] -> [${canonical_tz}]"
+    sed -i "s|^${param_name}\s*=\s*'${current_tz}'.*|${param_name} = '${canonical_tz}'|g" "$pgconf"
+  else
+    log "Parameter [${param_name}] is already canonical - [${current_tz}]"
+  fi
+}
+
+# TODO: Remove once postgres 17 is removed from Apps
+migrate_timezones() {
+  local data_dir="$1"
+  local pgconf="$data_dir/postgresql.conf"
+
+  if [ ! -f "$pgconf" ]; then
+    log "No postgresql.conf found at $pgconf, skipping timezone migration"
+    return 0
+  fi
+
+  log "Starting timezone migration for $data_dir"
+  for param in timezone log_timezone; do
+    if ! migrate_timezone_parameter "$pgconf" "$param"; then
+      log "WARNING: Timezone migration failed for parameter [$param]"
+      return 1
+    fi
+  done
+  log "Timezone migration complete"
+}
+
 run_post_upgrade_tasks() {
   local data_dir="$1"
-  local sql_files="$2"
+  local bin_path="$2"
+  local sql_files="$3"
 
   up_log "Starting temporary PostgreSQL server to run post-upgrade tasks..."
 
   export PGPASSWORD="${PGPASSWORD:-$POSTGRES_PASSWORD}"
   export PGDATA="$data_dir"
 
-  # Start temporary server
+  # Start temporary server with the correct PostgreSQL version
+  local original_path="$PATH"
+  export PATH="$bin_path:$PATH"
+  up_log "Using pg_ctl from [$(which pg_ctl)]"
   docker_temp_server_start postgres
 
   # Refresh collations in all databases (including template1, but not template0)
@@ -84,6 +157,7 @@ run_post_upgrade_tasks() {
 
   # Stop temporary server
   docker_temp_server_stop
+  export PATH="$original_path"
   unset PGPASSWORD
 
   up_log "Post-upgrade tasks completed"
@@ -123,6 +197,7 @@ check_dir_owner_match() {
   return 0
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Check if data exists in old structure and needs migration
 detect_old_data_location() {
   if [ -f "$BASE_DIR/PG_VERSION" ]; then
@@ -132,6 +207,7 @@ detect_old_data_location() {
   return 1
 }
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Migrate from old directory structure to new versioned structure
 migrate_directory_structure() {
   local old_location="$1"
@@ -184,7 +260,7 @@ perform_upgrade() {
   local old_version="$2"
   local new_version="$3"
 
-  up_log "Starting upgrade from PostgreSQL $old_version to $new_version"
+  up_log "Starting upgrade from PostgreSQL [$old_version] to [$new_version]"
 
   local old_bin_path
   old_bin_path=$(get_bin_path "$old_version")
@@ -235,14 +311,28 @@ perform_upgrade() {
   # Add checksum flag to POSTGRES_INITDB_ARGS
   local original_initdb_args="${POSTGRES_INITDB_ARGS:-}"
   if [ "$old_checksums_enabled" = true ]; then
+    # --data-checksums is available in all versions (since PostgreSQL 9.3)
     export POSTGRES_INITDB_ARGS="${original_initdb_args} --data-checksums"
   else
-    export POSTGRES_INITDB_ARGS="${original_initdb_args} --no-data-checksums"
+    # --no-data-checksums flag only exists in PostgreSQL 18+
+    # For older versions, omitting the flag defaults to disabled checksums
+    # TODO: Remove once postgres 17 is removed from Apps
+    if [ "$new_version" -gt 17 ]; then
+      export POSTGRES_INITDB_ARGS="${original_initdb_args} --no-data-checksums"
+    else
+      export POSTGRES_INITDB_ARGS="${original_initdb_args}"
+    fi
   fi
 
-  up_log "Using docker_init_database_dir from upstream entrypoint"
+  up_log "Using docker_init_database_dir from upstream entrypoint with PostgreSQL [$new_version] binaries"
   empty_line
+  # Temporarily prepend the target version's bin directory to PATH
+  # This ensures docker_init_database_dir uses the correct version's initdb
+  local original_path="$PATH"
+  export PATH="$new_bin_path:$PATH"
+  up_log "Using initdb from [$(which initdb)]"
   docker_init_database_dir
+  export PATH="$original_path"
   empty_line
 
   # Restore original POSTGRES_INITDB_ARGS
@@ -282,6 +372,10 @@ perform_upgrade() {
     --link \
     --check; then
     up_log "ERROR: Compatibility check failed"
+    up_log "Cleaning up new data directory [$new_data_dir]"
+    if ! rm -rf "$new_data_dir"; then
+      up_log "WARNING: Failed to remove new data directory [$new_data_dir] after failed compatibility check"
+    fi
     return 1
   fi
 
@@ -309,6 +403,10 @@ perform_upgrade() {
     --socketdir=/var/run/postgresql \
     --link; then
     up_log "ERROR: Upgrade failed"
+    up_log "Cleaning up new data directory [$new_data_dir]"
+    if ! rm -rf "$new_data_dir"; then
+      up_log "WARNING: Failed to remove new data directory [$new_data_dir] after failed upgrade"
+    fi
     return 1
   fi
 
@@ -319,7 +417,7 @@ perform_upgrade() {
   sql_files=$(find . -maxdepth 1 -name "*.sql" -type f 2>/dev/null || true)
 
   # Run post-upgrade SQL scripts if any were generated
-  if ! run_post_upgrade_tasks "$new_data_dir" "$sql_files"; then
+  if ! run_post_upgrade_tasks "$new_data_dir" "$new_bin_path" "$sql_files"; then
     up_log "ERROR: Post-upgrade tasks failed"
     return 1
   fi
@@ -338,9 +436,9 @@ perform_upgrade() {
   fi
 
   up_log "Upgrade process complete"
-  up_log "Old data preserved at: $old_data_dir"
-  up_log "New data location: $new_data_dir"
-  up_log "Backup available at: $backup_file"
+  up_log "Old data preserved at [$old_data_dir]"
+  up_log "New data location at [$new_data_dir]"
+  up_log "Backup available at [$backup_file]"
   return 0
 }
 
@@ -382,6 +480,7 @@ if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)
   exit 0
 fi
 
+# TODO: Remove once postgres 17 is removed from Apps
 # Check if we need to do directory migration first
 if old_location=$(detect_old_data_location); then
   log "Old directory structure detected, performing migration"
@@ -403,11 +502,11 @@ for version_dir in "$BASE_DIR"/*/docker; do
   [ -e "$version_dir" ] || continue
 
   checked_count=$((checked_count + 1))
-  log "Checking directory: $version_dir"
+  log "Checking directory [$version_dir]"
 
   if [ -f "$version_dir/PG_VERSION" ]; then
     this_version=$(cat "$version_dir/PG_VERSION")
-    log "  - Found database: PostgreSQL $this_version"
+    log "  - Found database: PostgreSQL [$this_version]"
 
     # Track the highest version found
     if [ "$this_version" -gt "$highest_version" ]; then
@@ -423,9 +522,9 @@ done
 # Check if we found any database
 if [ -z "$found_version" ]; then
   if [ "$checked_count" -eq 0 ]; then
-    log "No version directories found in $BASE_DIR/*/docker pattern."
+    log "No version directories found in [$BASE_DIR/*/docker] pattern."
   else
-    log "Checked $checked_count directories but found no valid PostgreSQL databases."
+    log "Checked [$checked_count] directories but found no valid PostgreSQL databases."
   fi
   log "Assuming this is a fresh install."
   exit 0
@@ -435,6 +534,13 @@ log "Using highest version found: PostgreSQL [$found_version] at [$found_data_di
 
 # Use the found data directory
 DATA_DIR="$found_data_dir"
+
+# TODO: Remove once postgres 17 is removed from Apps
+# Migrate timezones before checking versions
+if ! migrate_timezones "$DATA_DIR"; then
+  log "ERROR: Timezone migration failed"
+  exit 1
+fi
 
 OLD_VERSION=$(cat "$DATA_DIR/PG_VERSION")
 log "Current version: $OLD_VERSION"
@@ -457,5 +563,14 @@ if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
   exit 1
 fi
 
-log "Upgrade complete. New database available at: $BASE_DIR/$TARGET_VERSION/docker"
+# TODO: Remove once postgres 17 is removed from Apps
+# Migrate timezones in the new database directory after upgrade
+# We do this once more, as the perform_upgrade initializes a new DB,
+# which will use the TZ to set the timezone of the new DB
+if ! migrate_timezones "$BASE_DIR/$TARGET_VERSION/docker"; then
+  log "ERROR: Timezone migration failed"
+  exit 1
+fi
+
+log "Upgrade complete. New database available at [$BASE_DIR/$TARGET_VERSION/docker]"
 log "Done."
