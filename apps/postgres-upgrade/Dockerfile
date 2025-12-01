@@ -7,7 +7,9 @@ RUN apt-get install -y --no-install-recommends \
   tzdata-legacy \
   postgresql-15 \
   postgresql-16 \
-  postgresql-17
+  postgresql-17 \
+  postgresql-17-postgis-3 \
+  postgresql-18-postgis-3
 
 # Ensure listen_addresses is set to '*' for all PostgreSQL versions
 # This matches the default behavior of the official PostgreSQL Docker images
