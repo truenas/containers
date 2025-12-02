@@ -429,7 +429,7 @@ perform_upgrade() {
   if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
-    if ! rm -rf "$BASE_DIR/$new_version"; then
+    if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
       up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed compatibility check"
     fi
     return 1
@@ -462,7 +462,7 @@ perform_upgrade() {
   if ! "${upgrade_cmd[@]}"; then
     up_log "ERROR: Upgrade failed"
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
-    if ! rm -rf "$BASE_DIR/$new_version"; then
+    if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
       up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed upgrade"
     fi
     return 1
