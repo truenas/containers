@@ -112,15 +112,13 @@ detect_preload_libraries() {
   if [ -z "$loadable_libs_file" ] || [ ! -f "$loadable_libs_file" ]; then
     return 1
   fi
-
   up_log "Checking loadable libraries from pg_upgrade output..."
-  cat "$loadable_libs_file"
 
   # Extract library names from error messages
   # Error format: could not load library "libname": ERROR:  libname must be loaded via shared_preload_libraries
   local libs_to_preload
-  libs_to_preload=$(grep "must be loaded via shared_preload_libraries" "$loadable_libs_file" 2>/dev/null | \
-    sed -n 's/.*could not load library "\([^"]*\)".*/\1/p' | \
+  libs_to_preload=$(grep -o 'could not load library "[^"]*"' "$loadable_libs_file" 2>/dev/null | \
+    sed 's/could not load library "\([^"]*\)"/\1/' | \
     sort -u | \
     tr '\n' ',' | \
     sed 's/,$//')
@@ -429,8 +427,6 @@ perform_upgrade() {
   # Handle final check result
   if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
-    # Print loadable_libraries.txt contents for debugging
-    up_log $(find "$new_data_dir/pg_upgrade_output.d/" -name "loadable_libraries.txt" -type f 2>/dev/null | head -n 1)
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
     if ! rm -rf "$BASE_DIR/$new_version"; then
       up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed compatibility check"
