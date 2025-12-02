@@ -119,6 +119,7 @@ detect_preload_libraries() {
   local libs_to_preload
   libs_to_preload=$(grep -o 'could not load library "[^"]*"' "$loadable_libs_file" 2>/dev/null | \
     sed 's/could not load library "\([^"]*\)"/\1/' | \
+    sed 's|^\$libdir/||' | \
     sort -u | \
     tr '\n' ',' | \
     sed 's/,$//')
