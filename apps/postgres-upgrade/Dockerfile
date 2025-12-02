@@ -15,13 +15,14 @@ RUN apt-get install -y --no-install-recommends \
   postgresql-17-pgvector \
   postgresql-18-pgvector
 
+WORKDIR /tmp
+
 # Install VectorChord from GitHub releases
-RUN VCHORD_VERSION=0.5.3 && \
+RUN VCHORD_VERSION="0.5.3" && \
   ARCH=$(dpkg --print-architecture) && \
-  cd /tmp && \
-  wget https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
-  wget https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
-  wget https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
+  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
+  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
+  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
   apt-get install -y --no-install-recommends \
   ./postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb \
   ./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb \
