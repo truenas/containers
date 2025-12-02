@@ -4,9 +4,9 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   rsync \
   zstd \
+  wget \
   tzdata-legacy \
   ca-certificates \
-  wget \
   postgresql-15 \
   postgresql-16 \
   postgresql-17 \
