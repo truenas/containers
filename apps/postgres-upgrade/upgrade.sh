@@ -102,6 +102,39 @@ migrate_timezones() {
   log "Timezone migration complete"
 }
 
+detect_preload_libraries() {
+  local new_data_dir="$1"
+
+  # Check loadable_libraries.txt for preload requirements
+  local loadable_libs_file
+  loadable_libs_file=$(find "$new_data_dir/pg_upgrade_output.d/" -name "loadable_libraries.txt" -type f 2>/dev/null | head -n 1)
+
+  if [ -z "$loadable_libs_file" ] || [ ! -f "$loadable_libs_file" ]; then
+    return 1
+  fi
+
+  up_log "Checking loadable libraries from pg_upgrade output..."
+  cat "$loadable_libs_file"
+
+  # Extract library names from error messages
+  # Error format: could not load library "libname": ERROR:  libname must be loaded via shared_preload_libraries
+  local libs_to_preload
+  libs_to_preload=$(grep "must be loaded via shared_preload_libraries" "$loadable_libs_file" 2>/dev/null | \
+    sed -n 's/.*could not load library "\([^"]*\)".*/\1/p' | \
+    sort -u | \
+    tr '\n' ',' | \
+    sed 's/,$//')
+
+  if [ -z "$libs_to_preload" ]; then
+    up_log "No preload requirements detected"
+    return 1
+  fi
+
+  up_log "Detected libraries requiring shared_preload_libraries: $libs_to_preload"
+  echo "$libs_to_preload"
+  return 0
+}
+
 run_post_upgrade_tasks() {
   local data_dir="$1"
   local bin_path="$2"
@@ -361,17 +394,43 @@ perform_upgrade() {
     up_log "WARNING: Failed to set permissions on backup file [$backup_file]"
   fi
 
-  # Compatibility check
-  up_log "Running compatibility check..."
-  if ! "$new_bin_path"/pg_upgrade \
-    --old-bindir="$old_bin_path" \
-    --new-bindir="$new_bin_path" \
-    --old-datadir="$old_data_dir" \
-    --new-datadir="$new_data_dir" \
-    --socketdir=/var/run/postgresql \
-    --link \
-    --check; then
+  # Build base pg_upgrade command (shared by check and actual upgrade)
+  local pg_upgrade_base_cmd=(
+    "$new_bin_path"/pg_upgrade
+    --old-bindir="$old_bin_path"
+    --new-bindir="$new_bin_path"
+    --old-datadir="$old_data_dir"
+    --new-datadir="$new_data_dir"
+    --socketdir=/var/run/postgresql
+    --link
+  )
+
+  # Compatibility check - run once to detect loadable libraries
+  up_log "Running initial compatibility check..."
+  local check_failed=false
+  local pg_upgrade_opts=""
+
+  if ! "${pg_upgrade_base_cmd[@]}" --check; then
+    check_failed=true
+
+    # Try to detect preload libraries and retry
+    local libs_to_preload
+    if libs_to_preload=$(detect_preload_libraries "$new_data_dir"); then
+      up_log "Retrying compatibility check with shared_preload_libraries options..."
+      pg_upgrade_opts="-c shared_preload_libraries='$libs_to_preload'"
+
+      if "${pg_upgrade_base_cmd[@]}" --check --old-options "$pg_upgrade_opts" --new-options "$pg_upgrade_opts"; then
+        check_failed=false
+        up_log "Compatibility check passed after retry"
+      fi
+    fi
+  fi
+
+  # Handle final check result
+  if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
+    # Print loadable_libraries.txt contents for debugging
+    up_log $(find "$new_data_dir/pg_upgrade_output.d/" -name "loadable_libraries.txt" -type f 2>/dev/null | head -n 1)
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
     if ! rm -rf "$BASE_DIR/$new_version"; then
       up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed compatibility check"
@@ -395,13 +454,15 @@ perform_upgrade() {
   # Perform actual upgrade
   up_log "Performing upgrade..."
   up_log "SQL scripts will be created in: $upgrade_work_dir"
-  if ! "$new_bin_path"/pg_upgrade \
-    --old-bindir="$old_bin_path" \
-    --new-bindir="$new_bin_path" \
-    --old-datadir="$old_data_dir" \
-    --new-datadir="$new_data_dir" \
-    --socketdir=/var/run/postgresql \
-    --link; then
+
+  # Build upgrade command with optional preload library options
+  local upgrade_cmd=("${pg_upgrade_base_cmd[@]}")
+  if [ -n "$pg_upgrade_opts" ]; then
+    up_log "Using shared_preload_libraries options: $pg_upgrade_opts"
+    upgrade_cmd+=(--old-options "$pg_upgrade_opts" --new-options "$pg_upgrade_opts")
+  fi
+
+  if ! "${upgrade_cmd[@]}"; then
     up_log "ERROR: Upgrade failed"
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
     if ! rm -rf "$BASE_DIR/$new_version"; then
