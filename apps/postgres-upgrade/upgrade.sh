@@ -117,8 +117,8 @@ detect_preload_libraries() {
   # Extract library names from error messages
   # Error format: could not load library "libname": ERROR:  libname must be loaded via shared_preload_libraries
   local libs_to_preload
-  libs_to_preload=$(grep -o 'could not load library "[^"]*"' "$loadable_libs_file" 2>/dev/null | \
-    sed 's/could not load library "\([^"]*\)"/\1/' | \
+  libs_to_preload=$(grep "must be loaded via shared_preload_libraries" "$loadable_libs_file" 2>/dev/null | \
+    sed -n 's/.*could not load library "\([^"]*\)".*/\1/p' | \
     sed 's|^\$libdir/||' | \
     sort -u | \
     tr '\n' ',' | \
