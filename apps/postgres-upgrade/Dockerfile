@@ -23,13 +23,13 @@ ENV VCHORD_VERSION="0.5.3"
 # Install VectorChord from GitHub releases
 RUN set -eux; \
   ARCH=$(dpkg --print-architecture) && \
-  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
-  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
-  wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
   apt-get install -y --no-install-recommends \
-  ./postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb \
-  ./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb \
-  ./postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
+  "./postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
+  "./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
+  "./postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
   rm -f ./*.deb
 
 # Ensure listen_addresses is set to '*' for all PostgreSQL versions
