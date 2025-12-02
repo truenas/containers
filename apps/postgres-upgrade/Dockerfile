@@ -17,8 +17,11 @@ RUN apt-get install -y --no-install-recommends \
 
 WORKDIR /tmp
 
+# renovate: datasource=github-releases depName=tensorchord/VectorChord
+ENV VCHORD_VERSION="0.5.3"
+
 # Install VectorChord from GitHub releases
-RUN VCHORD_VERSION="0.5.3" && \
+RUN set -eux; \
   ARCH=$(dpkg --print-architecture) && \
   wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
   wget -q https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb && \
