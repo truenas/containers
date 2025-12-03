@@ -4,7 +4,9 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   rsync \
   zstd \
+  wget \
   tzdata-legacy \
+  ca-certificates \
   postgresql-15 \
   postgresql-16 \
   postgresql-17 \
@@ -12,6 +14,23 @@ RUN apt-get install -y --no-install-recommends \
   postgresql-18-postgis-3 \
   postgresql-17-pgvector \
   postgresql-18-pgvector
+
+WORKDIR /tmp
+
+# renovate: datasource=github-releases depName=tensorchord/VectorChord
+ENV VCHORD_VERSION="0.5.3"
+
+# Install VectorChord from GitHub releases
+RUN set -eux; \
+  ARCH=$(dpkg --print-architecture) && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  apt-get install -y --no-install-recommends \
+  "./postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
+  "./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
+  "./postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  rm -f ./*.deb
 
 # Ensure listen_addresses is set to '*' for all PostgreSQL versions
 # This matches the default behavior of the official PostgreSQL Docker images
