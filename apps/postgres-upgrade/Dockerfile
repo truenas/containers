@@ -18,7 +18,7 @@ RUN apt-get install -y --no-install-recommends \
 WORKDIR /tmp
 
 # renovate: datasource=github-releases depName=tensorchord/VectorChord
-ENV VCHORD_VERSION="0.5.3"
+ENV VCHORD_VERSION=0.5.3
 
 # Install VectorChord from GitHub releases
 RUN set -eux; \
