@@ -428,10 +428,16 @@ perform_upgrade() {
   # Handle final check result
   if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
-    # Cat all the files to the log ("$new_data_dir/pg_upgrade_output.d/")
+    local output_dir="$new_data_dir/pg_upgrade_output.d"
     up_log "Compatibility check output (RAW OUTPUT):"
     up_log "------------------------------------------"
-    cat "$new_data_dir/pg_upgrade_output.d/"*
+    if compgen -G "$output_dir"/* > /dev/null; then
+      while IFS= read -r line; do
+        up_log "$line"
+      done < <(cat "$output_dir"/*)
+    else
+      up_log "No compatibility check output files found in [$output_dir]"
+    fi
     up_log "------------------------------------------"
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
     if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
