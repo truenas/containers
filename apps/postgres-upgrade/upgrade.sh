@@ -428,6 +428,11 @@ perform_upgrade() {
   # Handle final check result
   if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
+    # Cat all the files to the log ("$new_data_dir/pg_upgrade_output.d/")
+    up_log "Compatibility check output (RAW OUTPUT):"
+    up_log "------------------------------------------"
+    cat "$new_data_dir/pg_upgrade_output.d/"*
+    up_log "------------------------------------------"
     up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
     if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
       up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed compatibility check"
