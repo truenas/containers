@@ -434,7 +434,7 @@ perform_upgrade() {
     if compgen -G "$output_dir"/* > /dev/null; then
       while IFS= read -r line; do
         up_log "$line"
-      done < <(cat "$output_dir"/*)
+      done < <(find "$output_dir" -type f -exec cat {} + 2>/dev/null || true)
     else
       up_log "No compatibility check output files found in [$output_dir]"
     fi
