@@ -10,7 +10,7 @@ ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${S
 RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
   chmod +x /usr/local/bin/supercronic
 
-ENV CRON_TAB_FILE=/crontab
+ENV CRON_TAB_FILE=/crontasks
 COPY cron.sh /cron.sh
 RUN chmod +x /cron.sh
 
