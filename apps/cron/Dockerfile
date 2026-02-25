@@ -14,4 +14,8 @@ ENV CRON_TAB_FILE=/crontab
 COPY cron.sh /cron.sh
 RUN chmod +x /cron.sh
 
+USER 568
+
+RUN /usr/local/bin/supercronic --version
+
 ENTRYPOINT ["/cron.sh"]
