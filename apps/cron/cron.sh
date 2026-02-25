@@ -20,4 +20,4 @@ echo '--------------------------------------------------'
 
 echo ''
 echo "Crontab validation successful. Starting supercronic service..."
-/usr/local/bin/supercronic "${cron_file}"
+/usr/local/bin/supercronic --prometheus-listen-address="0.0.0.0:${METRICS_PORT:-8080}" "${cron_file}"

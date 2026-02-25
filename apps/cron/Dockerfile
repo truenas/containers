@@ -17,5 +17,8 @@ RUN chmod +x /cron.sh
 USER 568
 
 RUN /usr/local/bin/supercronic --version
+ENV METRICS_PORT=8080
+
+HEALTHCHECK CMD curl -fsSo /dev/null http://127.0.0.1:8080/health
 
 ENTRYPOINT ["/cron.sh"]
