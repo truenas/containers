@@ -111,6 +111,18 @@
 | `IX_ONLYOFFICE_JWT`        | OnlyOffice JWT        | `onlyoffice` |    `jwt_secret`     |  `""`   |  `random_string_of_characters`   |
 | `IX_ONLYOFFICE_JWT_HEADER` | OnlyOffice JWT Header | `onlyoffice` |    `jwt_header`     |  `""`   |         `Authorization`          |
 
+### Talk
+
+| Variable                          | Description                  |  App(s)  |    Config Key(s)    | Default |       Example        |
+| --------------------------------- | ---------------------------- | :------: | :-----------------: | :-----: | :------------------: |
+| `IX_TALK`                         | Enable Talk                  |          |                     | `false` |        `true`        |
+| `IX_TALK_STUN_SERVER`             | Talk STUN server             | `spreed` |   `stun_servers`    |  `""`   |     `stun1:3478`     |
+| `IX_TALK_TURN_SERVER`             | Talk TURN server             | `spreed` |   `turn_servers`    |  `""`   |     `turn1:1234`     |
+| `IX_TALK_TURN_SECRET`             | Talk TURN secret             | `spreed` |   `turn_servers`    |  `""`   |    `some_secret`     |
+| `IX_TALK_SIGNALING_SERVER`        | Talk Signaling server        | `spreed` | `signaling_servers` |  `""`   | `signal.example.com` |
+| `IX_TALK_SIGNALING_SERVER_VERIFY` | Talk Signaling server verify | `spreed` | `signaling_servers` | `true`  |       `false`        |
+| `IX_TALK_SIGNALING_SECRET`        | Talk Signaling secret        | `spreed` | `signaling_secret`  |  `""`   |    `some_secret`     |
+
 > Visit Nextcloud official documentation for more information about each `Config key`
 >
 > Also see [config example](https://github.com/nextcloud/server/blob/master/config/config.sample.php)
