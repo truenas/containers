@@ -57,6 +57,7 @@ jobs:
           - app: nextcloud-fpm
           - app: nextcloud-notify-push
           - app: container-utils
+          - app: cron
 
     steps:
       - name: Checkout

@@ -1,13 +1,6 @@
 #!/bin/sh
 set -e
 
-# Wait for Nextcloud installation to complete
-while [ ! -f "/var/www/html/lib/versioncheck.php" ]; do
-  echo 'Waiting for Nextcloud installation to complete...'
-  echo 'Checking again in 2 minutes...'
-  sleep 2m
-done
-
 cron_file="${CRON_TAB_FILE:-/crontasks}"
 
 # Test crontab file
