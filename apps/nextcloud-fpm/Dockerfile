@@ -1,8 +1,9 @@
 FROM nextcloud:33.0.0-fpm
 
-# Adds SURY PHP repository (This is a workaround because IMAP php extension is no longer available in Debian Trixie)
+# Add SURY PHP repository to get c-client library (libc-client2007e-dev)
+# The c-client library is no longer available in Debian Trixie
 # https://github.com/nextcloud/docker/issues/2456
-# https://www.voodoo.business/blog/2025/08/11/trixie-php8-4-imap-missing/
+# https://bugs.debian.org/1092646
 # https://wiki.debian.org/AdditionalPHPVersions (Quotes "The SURY repository is a reputable repository by web hosting professionals worldwide, but IT'S NOT A OFFICIAL DEBIAN REPOSITORY. You have been warned.")
 RUN set -ex \
   && apt-get update \
@@ -11,7 +12,7 @@ RUN set -ex \
   && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-php.gpg \
   \
   && apt-get update \
-  # Development files for c-client mail API (used by IMAP)
+  # Install c-client development library from SURY (required for IMAP extension)
   && apt-get install -y --no-install-recommends libc-client-dev \
   && apt-get dist-clean \
   \
@@ -59,30 +60,27 @@ RUN set -ex \
   && apt-get install -y --no-install-recommends \
   # Development files for bzip2 compression
   libbz2-dev \
-  # Development files for Kerberos authentication
+  # Development files for Kerberos authentication (provides pkg-config files needed by IMAP)
   libkrb5-dev \
   # Development files for the SMB client library
   libsmbclient-dev \
   # Development files for ImageMagick core functionality
   libmagickcore-dev \
   \
-  # Configure the PHP IMAP extension with additional features
-  # --with-kerberos: Add Kerberos authentication support
-  # --with-imap-ssl: Add SSL encryption support
-  && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
   # Install PHP extensions using the Docker PHP extension installer
   && docker-php-ext-install \
   # Adds support for bzip2 compression in PHP
   bz2 \
-  # Adds support for IMAP mail protocol in PHP
-  imap \
   # Adds support for SOAP web services in PHP
   soap \
-  # Install the smbclient extension from PECL (PHP Extension Community Library)
-  # This allows PHP to interact with Windows/Samba file shares
+  # Install PECL extensions
+  # IMAP extension (moved to PECL in PHP 8.4)
+  # https://php.watch/versions/8.4/imap-unbundled
+  && pecl install imap \
+  # SMB client extension for Windows/Samba file share access
   && pecl install smbclient \
-  # Enable the smbclient extension in PHP
-  && docker-php-ext-enable smbclient \
+  # Enable the PECL extensions in PHP
+  && docker-php-ext-enable imap smbclient \
   \
   # Mark all packages as automatically installed
   # This prepares for clean-up of packages that were only needed for building
