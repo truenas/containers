@@ -13,7 +13,11 @@ RUN apt-get install -y --no-install-recommends \
   postgresql-17-postgis-3 \
   postgresql-18-postgis-3 \
   postgresql-17-pgvector \
-  postgresql-18-pgvector
+  postgresql-18-pgvector \
+  postgresql-17-cron \
+  postgresql-18-cron \
+  postgresql-17-pg-ivm \
+  postgresql-18-pg-ivm
 
 WORKDIR /tmp
 
@@ -30,6 +34,19 @@ RUN set -eux; \
   "./postgresql-15-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
   "./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
   "./postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  rm -f ./*.deb
+
+# renovate: datasource=github-releases depName=paradedb/paradedb
+ENV PARADEDB_VERSION=0.21.8
+
+# Install ParadeDB pg_search extension from GitHub releases
+RUN set -eux; \
+  ARCH=$(dpkg --print-architecture) && \
+  wget -q "https://github.com/paradedb/paradedb/releases/download/v${PARADEDB_VERSION}/postgresql-17-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
+  wget -q "https://github.com/paradedb/paradedb/releases/download/v${PARADEDB_VERSION}/postgresql-18-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
+  apt-get install -y --no-install-recommends \
+  "./postgresql-17-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" \
+  "./postgresql-18-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
   rm -f ./*.deb
 
 # Ensure listen_addresses is set to '*' for all PostgreSQL versions
