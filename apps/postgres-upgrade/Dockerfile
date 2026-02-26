@@ -42,10 +42,8 @@ ENV PARADEDB_VERSION=0.21.8
 # Install ParadeDB pg_search extension from GitHub releases
 RUN set -eux; \
   ARCH=$(dpkg --print-architecture) && \
-  wget -q "https://github.com/paradedb/paradedb/releases/download/v${PARADEDB_VERSION}/postgresql-17-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
   wget -q "https://github.com/paradedb/paradedb/releases/download/v${PARADEDB_VERSION}/postgresql-18-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
   apt-get install -y --no-install-recommends \
-  "./postgresql-17-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" \
   "./postgresql-18-pg-search_${PARADEDB_VERSION}-1PARADEDB-trixie_${ARCH}.deb" && \
   rm -f ./*.deb
 
