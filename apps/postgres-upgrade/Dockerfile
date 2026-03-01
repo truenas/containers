@@ -1,4 +1,4 @@
-FROM postgres:18.2-trixie
+FROM postgres:18.3-trixie
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
