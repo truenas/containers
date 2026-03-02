@@ -17,6 +17,9 @@ RUN apt-get install -y --no-install-recommends \
   postgresql-17-pg-ivm \
   postgresql-18-pg-ivm
 
+# pgcron is used by paradedb, and ossapps (splitpro)
+# pgivm is used by paradedb
+
 WORKDIR /tmp
 
 # renovate: datasource=github-releases depName=tensorchord/VectorChord
@@ -46,6 +49,10 @@ RUN set -eux; \
 # Ensure listen_addresses is set to '*' for all PostgreSQL versions
 # This matches the default behavior of the official PostgreSQL Docker images
 # https://github.com/docker-library/postgres/blob/9c515320bc6aa1243585763eb1696118969ffef0/14/bookworm/Dockerfile#L179-L180
+# v16 is used by Asigra Enterprise app.
+RUN set -eux; \
+  sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" /usr/share/postgresql/16/postgresql.conf.sample && \
+  grep -F "listen_addresses = '*'" /usr/share/postgresql/16/postgresql.conf.sample
 RUN set -eux; \
   sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" /usr/share/postgresql/17/postgresql.conf.sample && \
   grep -F "listen_addresses = '*'" /usr/share/postgresql/17/postgresql.conf.sample
