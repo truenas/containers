@@ -91,7 +91,7 @@ jobs:
       # even if the repository is private
       - name: Login to DockerHub
         if: steps.detect_changes.outputs.skip == 'false'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
 
       - name: Build and push Docker images
         if: ${{ steps.detect_changes.outputs.skip == 'false' && steps.prepare.outputs.APP_VERSION != '' }}
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        uses: docker/build-push-action@9a57217389f1c89cb7c6bf96972f839d187aaf5b
         with:
           context: apps/${{ matrix.containers.app }}/
           push: true
