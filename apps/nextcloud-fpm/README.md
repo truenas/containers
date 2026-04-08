@@ -102,6 +102,17 @@
 | `IX_COLLABORA_INTERNAL_URL` | Collabora Internal URL                      | `richdocuments` |    `wopi_url`     |  `""`   |     `http://collabora:9980`     |
 | `IX_COLLABORA_ALLOWLIST`    | Collabora WOPI Allow List (Comma Separated) | `richdocuments` | `wopi_allowlist`  |  `""`   |   `172.16.0.0/12,10.0.0.0/12`   |
 
+### HaRP (AppAPI)
+
+| Variable              | Description                           | Default | Example                       |
+| --------------------- | ------------------------------------- | :-----: | ----------------------------- |
+| `IX_HARP`             | Enable HaRP AppAPI daemon             | `false` | `true`                        |
+| `IX_HARP_URL`         | HaRP daemon URL (from Nextcloud)      |  `""`   | `http://harp:2375`            |
+| `IX_HARP_NC_URL`      | Nextcloud URL (reachable by HaRP)     |  `""`   | `http://nextcloud`            |
+| `IX_HARP_NETWORK`     | Docker network HaRP and Nextcloud share |  `""`   | `nextcloud_default`           |
+| `IX_HARP_FRP_ADDRESS` | HaRP FRP address                      |  `""`   | `harp:7000`                   |
+| `IX_HARP_SHARED_KEY`  | Shared secret key between HaRP and Nextcloud | `""` | `my-secret-key`           |
+
 ### Onlyoffice
 
 | Variable                   | Description           |    App(s)    |    Config Key(s)    | Default |             Example              |
