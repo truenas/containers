@@ -104,14 +104,14 @@
 
 ### HaRP (AppAPI)
 
-| Variable              | Description                           | Default | Example                       |
-| --------------------- | ------------------------------------- | :-----: | ----------------------------- |
-| `IX_HARP`             | Enable HaRP AppAPI daemon             | `false` | `true`                        |
-| `IX_HARP_URL`         | HaRP daemon URL (from Nextcloud)      |  `""`   | `http://harp:2375`            |
-| `IX_HARP_NC_URL`      | Nextcloud URL (reachable by HaRP)     |  `""`   | `http://nextcloud`            |
-| `IX_HARP_NETWORK`     | Docker network HaRP and Nextcloud share |  `""`   | `nextcloud_default`           |
-| `IX_HARP_FRP_ADDRESS` | HaRP FRP address                      |  `""`   | `harp:7000`                   |
-| `IX_HARP_SHARED_KEY`  | Shared secret key between HaRP and Nextcloud | `""` | `my-secret-key`           |
+| Variable                  | Description                                                               | Default | Example                       |
+| ------------------------- | ------------------------------------------------------------------------- | :-----: | ----------------------------- |
+| `IX_HARP`                 | Enable HaRP AppAPI daemon                                                 | `false` | `true`                        |
+| `IX_HARP_URL`             | HaRP daemon URL as seen from Nextcloud; used to register the deploy daemon |  `""`   | `http://harp:2375`            |
+| `IX_HARP_NC_INTERNAL_URL` | Nextcloud internal URL as seen from HaRP (used for callbacks)             |  `""`   | `http://nextcloud`            |
+| `IX_HARP_NETWORK`         | Docker network shared by HaRP and Nextcloud                               |  `""`   | `nextcloud_default`           |
+| `IX_HARP_FRP_ADDRESS`     | HaRP Fast Reverse Proxy address; ExApps connect through this relay        |  `""`   | `harp:7000`                   |
+| `IX_HARP_SHARED_KEY`      | Shared secret key between HaRP and Nextcloud                              |  `""`   | `my-secret-key`               |
 
 ### Onlyoffice
 
