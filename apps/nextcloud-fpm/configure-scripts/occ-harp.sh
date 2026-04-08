@@ -8,13 +8,13 @@ occ_harp_install() {
   if occ app_api:daemon:get tn-harp >/dev/null 2>&1; then
     occ app_api:daemon:update tn-harp \
       --net "${IX_HARP_NETWORK:?"IX_HARP_NETWORK is unset"}" --harp \
-      --harp_frp_address "${IX_HARP_FRP_ADDRESS:?"IX_HARP_FRP_ADDRESS is unset"}" \
+      --harp_frp_address "${IX_HARP_INTERNAL_FRP_ADDRESS:?"IX_HARP_INTERNAL_FRP_ADDRESS is unset"}" \
       --harp_shared_key "${IX_HARP_SHARED_KEY:?"IX_HARP_SHARED_KEY is unset"}"
   else
     occ app_api:daemon:register tn-harp "HaRP (TrueNAS)" "docker-install" "http" \
-      "${IX_HARP_URL:?"IX_HARP_URL is unset"}" "${IX_HARP_NC_INTERNAL_URL:?"IX_HARP_NC_INTERNAL_URL is unset"}" \
+      "${IX_HARP_INTERNAL_URL:?"IX_HARP_INTERNAL_URL is unset"}" "${IX_HARP_NC_INTERNAL_URL:?"IX_HARP_NC_INTERNAL_URL is unset"}" \
       --net "${IX_HARP_NETWORK:?"IX_HARP_NETWORK is unset"}" --harp \
-      --harp_frp_address "${IX_HARP_FRP_ADDRESS:?"IX_HARP_FRP_ADDRESS is unset"}" \
+      --harp_frp_address "${IX_HARP_INTERNAL_FRP_ADDRESS:?"IX_HARP_INTERNAL_FRP_ADDRESS is unset"}" \
       --harp_shared_key "${IX_HARP_SHARED_KEY:?"IX_HARP_SHARED_KEY is unset"}" \
       --set-default
   fi
