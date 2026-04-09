@@ -5,12 +5,10 @@ occ_harp_install() {
 
   install_app app_api
 
-  if [ -n "${IX_HARP_COMPUTE_DEVICE:-}" ]; then
-    case "${IX_HARP_COMPUTE_DEVICE}" in
-      cpu|cuda|rocm) ;;
-      *) echo "ERROR: IX_HARP_COMPUTE_DEVICE must be cpu, cuda, or rocm (got: ${IX_HARP_COMPUTE_DEVICE})"; exit 1 ;;
-    esac
-  fi
+  case "${IX_HARP_COMPUTE_DEVICE:=cpu}" in
+    cpu|cuda|rocm) ;;
+    *) echo "ERROR: IX_HARP_COMPUTE_DEVICE must be cpu, cuda, or rocm (got: ${IX_HARP_COMPUTE_DEVICE})"; exit 1 ;;
+  esac
 
   if occ app_api:daemon:list | grep -q '| tn-harp '; then
     occ app_api:daemon:unregister tn-harp
@@ -21,9 +19,9 @@ occ_harp_install() {
     --net="${IX_HARP_NETWORK:?"IX_HARP_NETWORK is unset"}" \
     --harp_frp_address="${IX_HARP_INTERNAL_FRP_ADDRESS:?"IX_HARP_INTERNAL_FRP_ADDRESS is unset"}" \
     --harp_shared_key="${IX_HARP_SHARED_KEY:?"IX_HARP_SHARED_KEY is unset"}" \
+    --compute_device="${IX_HARP_COMPUTE_DEVICE}" \
     --harp \
-    --set-default \
-    ${IX_HARP_COMPUTE_DEVICE:+--compute_device=${IX_HARP_COMPUTE_DEVICE}}
+    --set-default
 }
 
 occ_harp_remove() {
