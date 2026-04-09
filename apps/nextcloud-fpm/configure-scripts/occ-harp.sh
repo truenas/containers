@@ -28,9 +28,10 @@ occ_harp_remove() {
   echo '## Removing HaRP (AppAPI) configuration...'
   echo ''
 
+  # Can't remove the app because it's a built-in app.
+  # Just cleanup the daemon registration if it exists.
+
   if occ app_api:daemon:list | grep -q '| tn-harp '; then
     occ app_api:daemon:unregister tn-harp
   fi
-
-  remove_app app_api
 }
