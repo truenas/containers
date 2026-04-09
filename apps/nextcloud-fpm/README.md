@@ -104,14 +104,14 @@
 
 ### HaRP (AppAPI)
 
-| Variable                  | Description                                                               | Default | Example                       |
-| ------------------------- | ------------------------------------------------------------------------- | :-----: | ----------------------------- |
-| `IX_HARP`                 | Enable HaRP AppAPI daemon                                                 | `false` | `true`                        |
-| `IX_HARP_INTERNAL_URL`         | HaRP daemon URL as seen from Nextcloud (internal); used to register the deploy daemon |  `""`   | `http://harp:2375`   |
-| `IX_HARP_NC_INTERNAL_URL`      | Nextcloud internal URL as seen from HaRP (used for callbacks)                         |  `""`   | `http://nextcloud`   |
-| `IX_HARP_NETWORK`              | Docker network shared by HaRP and Nextcloud                                           |  `""`   | `nextcloud_default`  |
-| `IX_HARP_INTERNAL_FRP_ADDRESS` | HaRP Fast Reverse Proxy address (internal); ExApps connect through this relay         |  `""`   | `harp:7000`          |
-| `IX_HARP_SHARED_KEY`      | Shared secret key between HaRP and Nextcloud                              |  `""`   | `my-secret-key`               |
+| Variable                       | Description                                                                           | Default | Example             |
+| ------------------------------ | ------------------------------------------------------------------------------------- | :-----: | ------------------- |
+| `IX_HARP`                      | Enable HaRP AppAPI daemon                                                             | `false` | `true`              |
+| `IX_HARP_INTERNAL_URL`         | HaRP daemon URL as seen from Nextcloud (internal); used to register the deploy daemon |  `""`   | `http://harp:8780`  |
+| `IX_HARP_NC_INTERNAL_URL`      | Nextcloud internal URL as seen from HaRP (used for callbacks)                         |  `""`   | `http://nextcloud`  |
+| `IX_HARP_NETWORK`              | Docker network shared by HaRP and Nextcloud                                           |  `""`   | `nextcloud_default` |
+| `IX_HARP_INTERNAL_FRP_ADDRESS` | HaRP Fast Reverse Proxy address (internal); ExApps connect through this relay         |  `""`   | `harp:8782`         |
+| `IX_HARP_SHARED_KEY`           | Shared secret key between HaRP and Nextcloud                                          |  `""`   | `my-secret-key`     |
 
 ### Onlyoffice
 
