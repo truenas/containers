@@ -14,7 +14,7 @@ occ_harp_install() {
     occ app_api:daemon:unregister tn-harp
   fi
 
-  occ app_api:daemon:register tn-harp "HaRP (TrueNAS)" "docker-install" "http" \
+  occ app_api:daemon:register -vvv tn-harp "HaRP (TrueNAS)" "docker-install" "http" \
     "${IX_HARP_INTERNAL_URL:?"IX_HARP_INTERNAL_URL is unset"}" "${IX_HARP_NC_INTERNAL_URL:?"IX_HARP_NC_INTERNAL_URL is unset"}" \
     --net="${IX_HARP_NETWORK:?"IX_HARP_NETWORK is unset"}" \
     --harp_frp_address="${IX_HARP_INTERNAL_FRP_ADDRESS:?"IX_HARP_INTERNAL_FRP_ADDRESS is unset"}" \
