@@ -115,6 +115,16 @@ else
 fi
 
 echo ''
+# Configure HaRP (AppAPI)
+if [ "${IX_HARP:-"false"}" = "true" ]; then
+  echo '# HaRP is enabled.'
+  occ_harp_install
+else
+  echo '# HaRP is disabled.'
+  occ_harp_remove
+fi
+
+echo ''
 # Perform cleanups
 occ_cleanups
 
