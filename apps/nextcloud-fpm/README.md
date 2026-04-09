@@ -112,6 +112,7 @@
 | `IX_HARP_NETWORK`              | Docker network shared by HaRP and Nextcloud                                           |  `""`   | `nextcloud_default` |
 | `IX_HARP_INTERNAL_FRP_ADDRESS` | HaRP Fast Reverse Proxy address (internal); ExApps connect through this relay         |  `""`   | `harp:8782`         |
 | `IX_HARP_SHARED_KEY`           | Shared secret key between HaRP and Nextcloud                                          |  `""`   | `my-secret-key`     |
+| `IX_HARP_COMPUTE_DEVICE`       | Computation device for GPU support (`cpu`, `cuda`, `rocm`)                            |  `""`   | `cuda`              |
 
 ### Onlyoffice
 
