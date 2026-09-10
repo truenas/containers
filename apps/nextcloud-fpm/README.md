@@ -123,6 +123,18 @@
 | `IX_ONLYOFFICE_JWT`        | OnlyOffice JWT        | `onlyoffice` |    `jwt_secret`     |  `""`   |  `random_string_of_characters`   |
 | `IX_ONLYOFFICE_JWT_HEADER` | OnlyOffice JWT Header | `onlyoffice` |    `jwt_header`     |  `""`   |         `Authorization`          |
 
+### Talk
+
+| Variable                          | Description                                   |  App(s)  |           Config Key(s)            | Default |                      Example                      |
+| --------------------------------- | --------------------------------------------- | :------: | :--------------------------------: | :-----: | :-----------------------------------------------: |
+| `IX_TALK`                         | Enable Talk                                   |          |                                    | `false` |                      `true`                       |
+| `IX_TALK_STUN_SERVERS`            | Talk STUN servers (Space Separated)           | `spreed` |           `stun_servers`           |  `""`   |             `cloud.example.com:3478`              |
+| `IX_TALK_TURN_SERVER`             | Talk TURN server                              | `spreed` |       `turn_servers:server`        |  `""`   |             `cloud.example.com:3478`              |
+| `IX_TALK_TURN_SECRET`             | Talk TURN secret                              | `spreed` |       `turn_servers:secret`        |  `""`   |           `random_string_of_characters`           |
+| `IX_TALK_SIGNALING_SERVER`        | Talk Signaling server URL                     | `spreed` | `signaling_servers:servers:server` |  `""`   | `https://cloud.example.com/standalone-signaling/` |
+| `IX_TALK_SIGNALING_SERVER_VERIFY` | Verify the Signaling server's TLS certificate | `spreed` | `signaling_servers:servers:verify` | `true`  |                      `false`                      |
+| `IX_TALK_SIGNALING_SECRET`        | Talk Signaling secret                         | `spreed` |     `signaling_servers:secret`     |  `""`   |           `random_string_of_characters`           |
+
 > Visit Nextcloud official documentation for more information about each `Config key`
 >
 > Also see [config example](https://github.com/nextcloud/server/blob/master/config/config.sample.php)

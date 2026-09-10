@@ -97,6 +97,19 @@ set_list() {
   fi
 }
 
+# Replaces an app config key with the given value.
+# The key is deleted first, so `config:app:set --type` never has to reconcile
+# a different stored type, which would ask for confirmation.
+set_app_value() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  type="${3:?"type is unset"}"
+  value="${4:?"value is unset"}"
+
+  occ config:app:delete "$app" "$key"
+  occ config:app:set "$app" "$key" --type="$type" --value="$value"
+}
+
 extract_domain() {
   url="$1"
 
