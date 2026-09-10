@@ -135,6 +135,17 @@
 | `IX_TALK_SIGNALING_SERVER_VERIFY` | Verify the Signaling server's TLS certificate | `spreed` | `signaling_servers:servers:verify` | `true`  |                      `false`                      |
 | `IX_TALK_SIGNALING_SECRET`        | Talk Signaling secret                         | `spreed` |     `signaling_servers:secret`     |  `""`   |           `random_string_of_characters`           |
 
+### Talk Recording
+
+Requires Talk to be enabled, the recording server connects to its signaling server.
+
+| Variable                          | Description                                   |  App(s)  |           Config Key(s)            | Default |            Example            |
+| --------------------------------- | --------------------------------------------- | :------: | :--------------------------------: | :-----: | :---------------------------: |
+| `IX_TALK_RECORDING`               | Enable Talk Recording                         |          |                                    | `false` |            `true`             |
+| `IX_TALK_RECORDING_SERVER`        | Talk Recording server URL                     | `spreed` | `recording_servers:servers:server` |  `""`   | `http://talk-recording:1234`  |
+| `IX_TALK_RECORDING_SERVER_VERIFY` | Verify the Recording server's TLS certificate | `spreed` | `recording_servers:servers:verify` | `true`  |            `false`            |
+| `IX_TALK_RECORDING_SECRET`        | Talk Recording secret                         | `spreed` |     `recording_servers:secret`     |  `""`   | `random_string_of_characters` |
+
 > Visit Nextcloud official documentation for more information about each `Config key`
 >
 > Also see [config example](https://github.com/nextcloud/server/blob/master/config/config.sample.php)
