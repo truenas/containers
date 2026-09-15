@@ -129,11 +129,30 @@
 | --------------------------------- | --------------------------------------------- | :------: | :--------------------------------: | :-----: | :-----------------------------------------------: |
 | `IX_TALK`                         | Enable Talk                                   |          |                                    | `false` |                      `true`                       |
 | `IX_TALK_STUN_SERVERS`            | Talk STUN servers (Space Separated)           | `spreed` |           `stun_servers`           |  `""`   |             `cloud.example.com:3478`              |
-| `IX_TALK_TURN_SERVER`             | Talk TURN server                              | `spreed` |       `turn_servers:server`        |  `""`   |             `cloud.example.com:3478`              |
-| `IX_TALK_TURN_SECRET`             | Talk TURN secret                              | `spreed` |       `turn_servers:secret`        |  `""`   |           `random_string_of_characters`           |
+| `IX_TALK_TURN_SERVERS`            | Talk TURN servers (JSON array, see below)     | `spreed` |           `turn_servers`           |  `""`   |               `[{"schemes": ...}]`                |
 | `IX_TALK_SIGNALING_SERVER`        | Talk Signaling server URL                     | `spreed` | `signaling_servers:servers:server` |  `""`   | `https://cloud.example.com/standalone-signaling/` |
 | `IX_TALK_SIGNALING_SERVER_VERIFY` | Verify the Signaling server's TLS certificate | `spreed` | `signaling_servers:servers:verify` | `true`  |                      `false`                      |
 | `IX_TALK_SIGNALING_SECRET`        | Talk Signaling secret                         | `spreed` |     `signaling_servers:secret`     |  `""`   |           `random_string_of_characters`           |
+
+`IX_TALK_STUN_SERVERS` and `IX_TALK_TURN_SERVERS` are written in full on every
+start, so whatever is configured on the app is exactly what ends up in Talk.
+Servers added through the Nextcloud admin UI are replaced on the next start.
+
+`IX_TALK_TURN_SERVERS` is a JSON array, each entry holding its own credentials:
+
+```json
+[
+  {
+    "schemes": "turn",
+    "server": "cloud.example.com:3478",
+    "secret": "random_string_of_characters",
+    "protocols": "udp,tcp"
+  }
+]
+```
+
+`schemes` is one of `turn`, `turns` or `turn,turns`, and `protocols` one of
+`udp`, `tcp` or `udp,tcp`.
 
 ### Talk Recording
 
