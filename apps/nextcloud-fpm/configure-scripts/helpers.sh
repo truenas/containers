@@ -97,6 +97,63 @@ set_list() {
   fi
 }
 
+# Replaces an app config key with the given value.
+#
+# No --type is passed on purpose. It stores the value as `mixed`, which is what
+# nextcloud's own writers produce. Giving it a concrete type makes every later
+# write from nextcloud itself fail with "conflict between new type (mixed) and
+# old type (...)", which breaks both the `occ` commands and the admin UI.
+#
+# The key is deleted first so a value stored with a concrete type by an earlier
+# version of this script gets reset back to mixed.
+set_app_value() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  value="${3:?"value is unset"}"
+
+  occ config:app:delete "$app" "$key"
+  occ config:app:set "$app" "$key" --value="$value"
+}
+
+# Reads an app config value that holds JSON of the given type, eg `!!map` or
+# `!!seq`. Prints the fallback when it is unset, empty or not of that type, so a
+# corrupted value gets replaced on the next run instead of failing the startup.
+#
+# The value is piped in and read with the json parser on purpose. php escapes
+# forward slashes when it stores these, and `from_json` rejects the resulting
+# `\/` with "found unknown escape character".
+get_app_json() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  type="${3:?"type is unset"}"
+  fallback="${4:?"fallback is unset"}"
+
+  current=$(occ config:app:get "$app" "$key" 2>/dev/null) || current=""
+  if [ -z "$current" ] || [ "$(printf '%s' "$current" | yq -p=json -o=json 'type' 2>/dev/null)" != "\"$type\"" ]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+
+  printf '%s' "$current" | yq -p=json -o=json -I=0 '.'
+}
+
+# Merges a JSON object into an app config key that holds a JSON object.
+#
+# `config:app:set` only takes a whole value, there is no nested key support for
+# app config (unlike system config), so the entire value has to be rewritten.
+# Merging first means keys we do not manage are carried over instead of dropped,
+# in case nextcloud grows another key inside one of these objects.
+merge_app_value() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  value="${3:?"value is unset"}"
+
+  current=$(get_app_json "$app" "$key" '!!map' '{}')
+
+  merged=$(printf '%s' "$current" | NEW="$value" yq -p=json -o=json -I=0 '. * (strenv(NEW) | from_json)')
+  set_app_value "$app" "$key" "$merged"
+}
+
 extract_domain() {
   url="$1"
 

@@ -11,11 +11,21 @@ else
   group="$gid"
 fi
 
+# Every occ call is a fresh php process that recompiles nextcloud from source.
+# A file based opcache keeps the compiled bytecode around between calls, which
+# is worth it because a single startup makes around a hundred of them.
+# This is only for the cli, php-fpm keeps using its shared memory opcache.
+opcache_dir='/tmp/.occ-opcache'
+php_opts=''
+if mkdir -p "$opcache_dir" 2>/dev/null; then
+  php_opts="-d opcache.enable_cli=1 -d opcache.file_cache=$opcache_dir -d opcache.file_cache_only=1"
+fi
+
 run_as() {
   if [ "$(id -u)" = 0 ]; then
-    su -p "$user" -s /bin/bash -c "php /var/www/html/occ $(printf '%q ' "$@")"
+    su -p "$user" -s /bin/bash -c "php $php_opts /var/www/html/occ $(printf '%q ' "$@")"
   else
-    /bin/bash -c "php /var/www/html/occ $(printf '%q ' "$@")"
+    /bin/bash -c "php $php_opts /var/www/html/occ $(printf '%q ' "$@")"
   fi
 }
 
