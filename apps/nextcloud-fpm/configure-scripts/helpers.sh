@@ -98,16 +98,21 @@ set_list() {
 }
 
 # Replaces an app config key with the given value.
-# The key is deleted first, so `config:app:set --type` never has to reconcile
-# a different stored type, which would ask for confirmation.
+#
+# No --type is passed on purpose. It stores the value as `mixed`, which is what
+# nextcloud's own writers produce. Giving it a concrete type makes every later
+# write from nextcloud itself fail with "conflict between new type (mixed) and
+# old type (...)", which breaks both the `occ` commands and the admin UI.
+#
+# The key is deleted first so a value stored with a concrete type by an earlier
+# version of this script gets reset back to mixed.
 set_app_value() {
   app="${1:?"app is unset"}"
   key="${2:?"key is unset"}"
-  type="${3:?"type is unset"}"
-  value="${4:?"value is unset"}"
+  value="${3:?"value is unset"}"
 
   occ config:app:delete "$app" "$key"
-  occ config:app:set "$app" "$key" --type="$type" --value="$value"
+  occ config:app:set "$app" "$key" --value="$value"
 }
 
 extract_domain() {

@@ -12,11 +12,10 @@ occ_talk_recording_install() {
   # to no, nextcloud stops advertising the recording capability and the container
   # sits there healthy and idle with no indication why.
   echo '### Enabling call recording...'
-  set_app_value spreed call_recording string yes
+  set_app_value spreed call_recording yes
 
-  # Note this is stored as an array, unlike the signaling servers which are a string.
   echo '### Configuring Talk Recording server...'
-  set_app_value spreed recording_servers array "$(
+  set_app_value spreed recording_servers "$(
     IX_TALK_RECORDING_SERVER_VERIFY="${IX_TALK_RECORDING_SERVER_VERIFY:-"true"}" \
       yq -n -o=json -I=0 '{
         "servers": [{
