@@ -14,8 +14,9 @@ occ_talk_recording_install() {
   echo '### Enabling call recording...'
   set_app_value spreed call_recording yes
 
+  # Merged rather than replaced, see the signaling server in occ-talk.sh
   echo '### Configuring Talk Recording server...'
-  set_app_value spreed recording_servers "$(
+  merge_app_value spreed recording_servers "$(
     IX_TALK_RECORDING_SERVER_VERIFY="${IX_TALK_RECORDING_SERVER_VERIFY:-"true"}" \
       yq -n -o=json -I=0 '{
         "servers": [{

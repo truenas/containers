@@ -115,6 +115,29 @@ set_app_value() {
   occ config:app:set "$app" "$key" --value="$value"
 }
 
+# Merges a JSON object into an app config key that holds a JSON object.
+#
+# `config:app:set` only takes a whole value, there is no nested key support for
+# app config (unlike system config), so the entire value has to be rewritten.
+# Merging first means keys we do not manage are carried over instead of dropped,
+# in case nextcloud grows another key inside one of these objects.
+#
+# Anything that is not a JSON object (unset, empty, corrupted) is treated as an
+# empty object, so a bad value gets replaced rather than failing the startup.
+merge_app_value() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  value="${3:?"value is unset"}"
+
+  current=$(occ config:app:get "$app" "$key" 2>/dev/null) || current=""
+  if [ -z "$current" ] || [ "$(printf '%s' "$current" | yq -p=json -o=json 'type' 2>/dev/null)" != '"!!map"' ]; then
+    current='{}'
+  fi
+
+  merged=$(CURRENT="$current" NEW="$value" yq -n -o=json -I=0 '(strenv(CURRENT) | from_json) * (strenv(NEW) | from_json)')
+  set_app_value "$app" "$key" "$merged"
+}
+
 extract_domain() {
   url="$1"
 

@@ -32,8 +32,10 @@ occ_talk_install() {
     }]'
   )"
 
+  # Merged rather than replaced, this one is an object and may hold keys we do
+  # not manage. The stun and turn values above are plain arrays, nothing to keep.
   echo '### Configuring Talk Signaling server...'
-  set_app_value spreed signaling_servers "$(
+  merge_app_value spreed signaling_servers "$(
     IX_TALK_SIGNALING_SERVER_VERIFY="${IX_TALK_SIGNALING_SERVER_VERIFY:-"true"}" \
       yq -n -o=json -I=0 '{
         "servers": [{
