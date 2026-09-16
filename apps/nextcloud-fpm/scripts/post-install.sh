@@ -58,6 +58,26 @@ else
 fi
 
 echo ''
+# Configure Talk
+if [ "${IX_TALK:-"false"}" = "true" ]; then
+  echo '# Talk is enabled.'
+  occ_talk_install
+else
+  echo '# Talk is disabled.'
+  occ_talk_remove
+fi
+
+echo ''
+# Configure Talk Recording. Needs Talk, it connects to its signaling server.
+if [ "${IX_TALK:-"false"}" = "true" ] && [ "${IX_TALK_RECORDING:-"false"}" = "true" ]; then
+  echo '# Talk Recording is enabled.'
+  occ_talk_recording_install
+else
+  echo '# Talk Recording is disabled.'
+  occ_talk_recording_remove
+fi
+
+echo ''
 # If Imaginary is enabled, previews are forced enabled
 if [ "${IX_IMAGINARY:-"true"}" = "true" ]; then
   IX_PREVIEWS="true"
