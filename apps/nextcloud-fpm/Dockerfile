@@ -1,4 +1,4 @@
-FROM nextcloud:35.0.0-fpm
+FROM nextcloud:35.0.1-fpm
 
 # Add SURY PHP repository to get c-client library (libc-client2007e-dev)
 # The c-client library is no longer available in Debian Trixie
@@ -111,7 +111,7 @@ RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
   chmod +x /usr/local/bin/supercronic
 
 # renovate: datasource=github-releases depName=mikefarah/yq
-ENV YQ_VERSION=v4.53.6
+ENV YQ_VERSION=v4.54.1
 ENV YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
 RUN \
   curl -fsSL "${YQ_URL}" -o /usr/local/bin/yq && \
