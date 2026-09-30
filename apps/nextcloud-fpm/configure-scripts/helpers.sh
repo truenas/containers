@@ -115,6 +115,24 @@ set_app_value() {
   occ config:app:set "$app" "$key" --value="$value"
 }
 
+# Replaces an app config key that the app declares as an array in its config
+# lexicon (eg spreed stun_servers and turn_servers since Talk 25).
+#
+# Unlike `set_app_value`, the type has to be given here. Nextcloud rejects a
+# `mixed` value for a key the lexicon declares as array, and `config:app:set`
+# only prints "Config value were not updated", leaving the key unset.
+#
+# occ asks for confirmation whenever --type is passed, even for a key that was
+# just deleted, and aborts without an answer. Hence the piped "yes".
+set_app_array_value() {
+  app="${1:?"app is unset"}"
+  key="${2:?"key is unset"}"
+  value="${3:?"value is unset"}"
+
+  occ config:app:delete "$app" "$key"
+  echo 'yes' | occ config:app:set "$app" "$key" --type=array --value="$value"
+}
+
 # Reads an app config value that holds JSON of the given type, eg `!!map` or
 # `!!seq`. Prints the fallback when it is unset, empty or not of that type, so a
 # corrupted value gets replaced on the next run instead of failing the startup.
