@@ -122,15 +122,17 @@ set_app_value() {
 # `mixed` value for a key the lexicon declares as array, and `config:app:set`
 # only prints "Config value were not updated", leaving the key unset.
 #
-# occ asks for confirmation whenever --type is passed, even for a key that was
-# just deleted, and aborts without an answer. Hence the piped "yes".
+# occ asks for confirmation whenever --type is passed for a key the lexicon
+# marks as sensitive (even one that was just deleted), as the type it reports
+# includes the sensitive flag and never matches the plain `array`. Without an
+# answer it aborts, so --no-interaction is passed, which skips the confirmation.
 set_app_array_value() {
   app="${1:?"app is unset"}"
   key="${2:?"key is unset"}"
   value="${3:?"value is unset"}"
 
   occ config:app:delete "$app" "$key"
-  echo 'yes' | occ config:app:set "$app" "$key" --type=array --value="$value"
+  occ config:app:set "$app" "$key" --type=array --value="$value" --no-interaction
 }
 
 # Reads an app config value that holds JSON of the given type, eg `!!map` or

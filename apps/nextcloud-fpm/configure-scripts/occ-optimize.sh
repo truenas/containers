@@ -6,7 +6,7 @@ occ_optimize() {
   occ db:add-missing-indices
   occ db:add-missing-columns
   occ db:add-missing-primary-keys
-  yes | occ db:convert-filecache-bigint
+  occ db:convert-filecache-bigint --no-interaction
   occ maintenance:mimetype:update-js
   occ maintenance:mimetype:update-db
   occ maintenance:update:htaccess
