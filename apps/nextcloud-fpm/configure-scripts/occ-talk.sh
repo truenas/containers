@@ -18,14 +18,14 @@ occ_talk_install() {
   # not re-runnable. The first two exit 1 when the entry already exists (which
   # would abort this script), and the last appends a duplicate on every run.
   echo '### Configuring Talk STUN servers...'
-  set_app_value spreed stun_servers "$(
+  set_app_array_value spreed stun_servers "$(
     TALK_STUN_SERVERS=$(echo "$IX_TALK_STUN_SERVERS" | tr '\n' ' ') \
       yq -n -o=json -I=0 '[strenv(TALK_STUN_SERVERS) | split(" ") | .[] | select(. != "")]'
   )"
 
   # Already a json array, each entry holding its own schemes/server/secret/protocols
   echo '### Configuring Talk TURN servers...'
-  set_app_value spreed turn_servers "$(printf '%s' "$IX_TALK_TURN_SERVERS" | yq -p=json -o=json -I=0 '.')"
+  set_app_array_value spreed turn_servers "$(printf '%s' "$IX_TALK_TURN_SERVERS" | yq -p=json -o=json -I=0 '.')"
 
   # Merged rather than replaced, this one is an object and may hold keys we do
   # not manage. The stun and turn values above are plain arrays, nothing to keep.
