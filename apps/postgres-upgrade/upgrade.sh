@@ -505,9 +505,11 @@ perform_upgrade() {
   fi
 
   up_log "Upgrade process complete"
-  up_log "Old data preserved at [$old_data_dir]"
   up_log "New data location at [$new_data_dir]"
+  up_log "Old data directory at [$old_data_dir] is no longer usable (upgraded with --link, data files are shared with the new version)"
+  up_log "      It can be safely deleted, this will not affect the new data directory."
   up_log "Backup available at [$backup_file]"
+  up_log "      To roll back, restore this backup. Keep it until you have verified the upgrade."
   return 0
 }
 
