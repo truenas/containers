@@ -1,10 +1,10 @@
-FROM debian:bookworm-slim
+FROM debian:13.7-slim
 
 LABEL maintainer="iXsystems <dev@ixsystems.com>"
-LABEL description="rsynd on debian bookworm"
+LABEL description="rsynd on debian trixie"
 
 RUN apt update && \
-    apt install -y rsync=3.2.7-1+deb12u2  procps && \
+    apt install -y rsync=3.5.0+ds1-0+deb13u1 procps && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
