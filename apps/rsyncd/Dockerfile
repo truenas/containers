@@ -1,10 +1,10 @@
-FROM debian:bookworm-slim
+FROM debian:12.15-slim
 
 LABEL maintainer="iXsystems <dev@ixsystems.com>"
 LABEL description="rsynd on debian bookworm"
 
 RUN apt update && \
-    apt install -y rsync=3.2.7-1+deb12u2  procps && \
+    apt install -y rsync procps && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
