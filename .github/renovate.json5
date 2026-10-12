@@ -18,10 +18,6 @@
       matchUpdateTypes: ["patch", "minor", "major"],
     },
     {
-      matchBaseBranches: ["master"],
-      addLabels: ["master"],
-    },
-    {
       matchDepTypes: ["action"],
       addLabels: ["actions"],
     },
