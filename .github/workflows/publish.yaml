@@ -139,7 +139,7 @@ jobs:
 
       - name: Build and push Docker images
         if: ${{ steps.detect_changes.outputs.skip == 'false' && steps.prepare.outputs.APP_VERSION != '' }}
-        uses: docker/build-push-action@ef1fb9688fc3626d0fd5e462f502cbbdc6456feb
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: apps/${{ matrix.containers.app }}/
           push: true

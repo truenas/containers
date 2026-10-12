@@ -18,10 +18,6 @@
       matchUpdateTypes: ["patch", "minor", "major"],
     },
     {
-      matchBaseBranches: ["master"],
-      addLabels: ["master"],
-    },
-    {
       // apt pins in rsyncd; the security repo carries CVE fixes before they reach main
       matchFileNames: ["apps/rsyncd/Dockerfile"],
       matchDatasources: ["deb"],

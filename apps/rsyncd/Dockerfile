@@ -1,6 +1,6 @@
 FROM debian:13.7-slim
 
-LABEL maintainer="iXsystems <dev@ixsystems.com>"
+LABEL maintainer="TrueNAS Engineering <dev@truenas.com>"
 LABEL description="rsynd on debian trixie"
 
 RUN apt update && \
