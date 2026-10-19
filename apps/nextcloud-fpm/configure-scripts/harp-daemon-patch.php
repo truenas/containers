@@ -11,6 +11,7 @@ declare(strict_types=1);
 // AppAPI has no occ command to update a daemon, and refuses to unregister one
 // that has ExApps deployed on it. Updating the row in place keeps the ExApps
 // attached, as they reference the daemon by name.
+// Upstream request for an occ command: https://github.com/nextcloud/app_api/issues/1129
 //
 // The <source> daemon is registered with occ first, so AppAPI itself validates
 // the settings, builds the deploy config and encrypts the shared key.

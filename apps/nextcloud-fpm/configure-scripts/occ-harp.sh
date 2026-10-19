@@ -44,6 +44,7 @@ occ_harp_install() {
   # AppAPI refuses to unregister a daemon that has ExApps deployed on it, and has
   # no occ command to update one. So register the settings under a staging name
   # and patch them onto the existing daemon in place.
+  # Upstream request for an occ command: https://github.com/nextcloud/app_api/issues/1129
   harp_daemon_register tn-harp-staging
   run_php /configure-scripts/harp-daemon-patch.php tn-harp tn-harp-staging
 }
