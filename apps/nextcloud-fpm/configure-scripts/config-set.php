@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // Usage: php config-set.php <config file> <key> <value> [<key> <value>...]
 //
+// https://github.com/nextcloud/app_api/issues/1129
 // Sets top-level string values in a nextcloud config.php, without occ.
 //
 // The values are passed as arguments, so they need no escaping, and only the
