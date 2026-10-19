@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 // Usage: php harp-daemon-patch.php <target> <source>
 //
-// https://github.com/nextcloud/app_api/issues/1129
 // Copies the settings of the <source> daemon onto the <target> daemon in place,
 // then unregisters <source>.
 //
