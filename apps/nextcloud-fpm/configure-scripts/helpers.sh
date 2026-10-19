@@ -174,6 +174,18 @@ merge_app_value() {
   set_app_value "$app" "$key" "$merged"
 }
 
+# Runs php as the web server user, the same way the occ shortcut runs occ.
+# The arguments are passed as positional parameters, as sh has no `printf %q`.
+# The `--` stops su from parsing them as its own options.
+run_php() {
+  if [ "$(id -u)" = 0 ]; then
+    # shellcheck disable=SC2016 # Expanded by the inner shell, from the arguments after the user
+    su -p -s /bin/sh -c 'exec php "$@"' -- www-data php "$@"
+  else
+    php "$@"
+  fi
+}
+
 extract_domain() {
   url="$1"
 
