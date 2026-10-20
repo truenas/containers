@@ -34,10 +34,6 @@ RUN set -ex \
   procps \
   # Multimedia framework for handling audio/video
   ffmpeg \
-  # VA-API drivers for hardware transcoding (AMD / Intel Gen8+)
-  # ffmpeg's libva only recommends them, so --no-install-recommends skips them
-  mesa-va-drivers \
-  intel-media-va-driver \
   # Library for HEIF image format support
   libheif1 \
   # Tool for adding OCR text layer to scanned PDF files, making them searchable
@@ -54,6 +50,10 @@ RUN set -ex \
   heif-gdk-pixbuf \
   # Common files for ImageMagick (image manipulation tool)
   imagemagick-common \
+  # VA-API drivers for hardware transcoding (AMD / Intel Gen8+)
+  # ffmpeg's libva only recommends them, so --no-install-recommends skips them
+  mesa-va-drivers \
+  intel-media-va-driver \
   \
   # Save a list of currently manually installed packages
   # This will be used later to restore the package state after building

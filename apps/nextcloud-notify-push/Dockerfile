@@ -3,7 +3,6 @@ FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4c
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 # hadolint ignore=DL3018
 RUN apk add --no-cache ca-certificates curl
-
 # renovate: datasource=github-releases depName=nextcloud/notify_push
 ENV NOTIFY_PUSH_VERSION=1.4.2
 
