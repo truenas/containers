@@ -13,6 +13,7 @@ on:
 
 env:
   REPOSITORY: ixsystems
+  GHCR_REPOSITORY: ghcr.io/truenas/containers
 
 jobs:
   lint:
@@ -96,6 +97,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
+      - name: Login to GHCR
+        if: steps.detect_changes.outputs.skip == 'false'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Prepare
         if: steps.detect_changes.outputs.skip == 'false'
         id: prepare
@@ -113,15 +122,17 @@ jobs:
           fi
           echo "Version: $VERSION"
 
-          result=$(docker manifest inspect "${{ env.REPOSITORY }}/${{ matrix.containers.app }}:$VERSION" || echo 1)
+          for repository in "${{ env.REPOSITORY }}" "${{ env.GHCR_REPOSITORY }}"; do
+            result=$(docker manifest inspect "$repository/${{ matrix.containers.app }}:$VERSION" || echo 1)
 
-          # Result contains 1 if the tag does not exist or a JSON object if it does.
-          # If the result is not 1, means the "production" tag exists.
-          # We should fail the build and ask for a version bump.
-          if [[ "$result" != 1 ]]; then
-            echo "Version $VERSION already exists, please bump the version in the VERSION file."
-            exit 1
-          fi
+            # Result contains 1 if the tag does not exist or a JSON object if it does.
+            # If the result is not 1, means the "production" tag exists.
+            # We should fail the build and ask for a version bump.
+            if [[ "$result" != 1 ]]; then
+              echo "Version $VERSION already exists in $repository, please bump the version in the VERSION file."
+              exit 1
+            fi
+          done
 
           echo "Version $VERSION does not exist, proceeding with build."
           # Initialize the output
@@ -143,5 +154,10 @@ jobs:
         with:
           context: apps/${{ matrix.containers.app }}/
           push: true
+          # Both tags point at the same manifest, so the digest is identical on both registries
           tags: |
             ${{ env.REPOSITORY }}/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
+            ${{ env.GHCR_REPOSITORY }}/${{ matrix.containers.app }}:${{ steps.prepare.outputs.APP_VERSION }}
+          # Links the GHCR package to this repository
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
