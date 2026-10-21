@@ -1,4 +1,4 @@
-FROM nextcloud:35.0.2-fpm
+FROM nextcloud:35.0.2-fpm@sha256:2556e045d57fff50d2b50ddd160d2d0730e6d5b6f71c33b903d491baa8444f03
 
 # Add SURY PHP repository to get c-client library (libc-client2007e-dev)
 # The c-client library is no longer available in Debian Trixie
@@ -109,7 +109,7 @@ RUN set -ex \
   && apt-get dist-clean
 
 # renovate: datasource=github-releases depName=aptible/supercronic
-ENV SUPERCRONIC_VERSION=v0.2.50
+ENV SUPERCRONIC_VERSION=v0.2.51
 ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-amd64
 RUN curl -fsSL ${SUPERCRONIC_URL} -o /usr/local/bin/supercronic && \
   chmod +x /usr/local/bin/supercronic
