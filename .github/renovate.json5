@@ -13,6 +13,17 @@
       matchUpdateTypes: ["patch", "minor", "major"],
     },
     {
+      matchManagers: ["dockerfile"],
+      pinDigests: true,
+    },
+    {
+      // same-tag rebuilds (e.g. base image security fixes); 1st and 15th of each month
+      matchManagers: ["dockerfile"],
+      matchUpdateTypes: ["digest"],
+      schedule: ["* * 1,15 * *"],
+      addLabels: ["digest"],
+    },
+    {
       enabled: true,
       matchDatasources: ["github-releases"],
       matchUpdateTypes: ["patch", "minor", "major"],
