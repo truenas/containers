@@ -1,6 +1,6 @@
-FROM mikefarah/yq:4.54.1 AS yq
+FROM mikefarah/yq:4.54.1@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e AS yq
 
-FROM python:3.15-slim-trixie
+FROM python:3.15-slim-trixie@sha256:533b0b2f9b5d46fd097091cf826f27902f1d6c3bca714b6dc74551356aa97a51
 
 USER root
 
