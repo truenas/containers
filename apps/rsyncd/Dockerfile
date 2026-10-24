@@ -1,4 +1,4 @@
-FROM debian:13.7-slim
+FROM debian:13.7-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
 
 LABEL maintainer="TrueNAS Engineering <dev@truenas.com>"
 LABEL description="rsynd on debian trixie"
