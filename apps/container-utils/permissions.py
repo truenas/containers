@@ -261,7 +261,7 @@ def apply_action(action: Action) -> Optional[str]:
             if item.name == SAFE_DIRECTORY_NAME:
                 continue
             try:
-                if item.is_dir():
+                if item.is_dir() and not item.is_symlink():
                     shutil.rmtree(item)
                 else:
                     item.unlink()
