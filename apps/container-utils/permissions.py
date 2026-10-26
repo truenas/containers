@@ -201,11 +201,13 @@ def fix_ownership(path: str, uid: int, gid: int, recursive: bool):
     """
     os.chown(path, uid, gid)
     if recursive:
+        # Change symlinks themselves, never their targets: a target may be
+        # outside the volume, and a dangling one would raise FileNotFoundError.
         for root, dirs, files in os.walk(path):
             for d in dirs:
-                os.chown(os.path.join(root, d), uid, gid)
+                os.chown(os.path.join(root, d), uid, gid, follow_symlinks=False)
             for f in files:
-                os.chown(os.path.join(root, f), uid, gid)
+                os.chown(os.path.join(root, f), uid, gid, follow_symlinks=False)
 
 
 def fix_permissions(path: str, mode: FileMode, recursive: bool):
@@ -219,11 +221,13 @@ def fix_permissions(path: str, mode: FileMode, recursive: bool):
     """
     os.chmod(path, mode.mode)
     if recursive:
+        # Skip symlinks: Linux cannot chmod a link itself, and following it
+        # could change a target outside the volume.
         for root, dirs, files in os.walk(path):
-            for d in dirs:
-                os.chmod(os.path.join(root, d), mode.mode)
-            for f in files:
-                os.chmod(os.path.join(root, f), mode.mode)
+            for name in dirs + files:
+                entry = os.path.join(root, name)
+                if not os.path.islink(entry):
+                    os.chmod(entry, mode.mode)
 
 
 def apply_action(action: Action) -> Optional[str]:
@@ -261,7 +265,7 @@ def apply_action(action: Action) -> Optional[str]:
             if item.name == SAFE_DIRECTORY_NAME:
                 continue
             try:
-                if item.is_dir():
+                if item.is_dir() and not item.is_symlink():
                     shutil.rmtree(item)
                 else:
                     item.unlink()
