@@ -3,7 +3,6 @@ FROM postgres:18.7-trixie@sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   rsync \
-  zstd \
   wget \
   tzdata-legacy \
   ca-certificates \
