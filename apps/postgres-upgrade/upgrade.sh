@@ -418,6 +418,12 @@ perform_upgrade() {
   # Restore original POSTGRES_INITDB_ARGS
   export POSTGRES_INITDB_ARGS="$original_initdb_args"
 
+  # docker_init_database_dir returns 0 even when initdb fails, and initdb removes what it created
+  if [ ! -f "$staged_data_dir/PG_VERSION" ]; then
+    up_log "ERROR: Failed to initialize the new cluster at [$staged_data_dir]"
+    return 1
+  fi
+
   # Build base pg_upgrade command (shared by check and actual upgrade)
   # --copy-file-range leaves the old cluster untouched, so it stays usable as the rollback,
   # and a failed or interrupted upgrade can simply be retried from it.
@@ -524,7 +530,10 @@ perform_upgrade() {
   # Copy pg_hba.conf (authentication rules - safe to copy between versions)
   # After the transfer, so the old rules cannot lock pg_upgrade out of the new cluster
   if [ -f "$old_data_dir/pg_hba.conf" ]; then
-    cp "$old_data_dir/pg_hba.conf" "$staged_data_dir/pg_hba.conf"
+    if ! cp "$old_data_dir/pg_hba.conf" "$staged_data_dir/pg_hba.conf"; then
+      up_log "ERROR: Failed to copy [$old_data_dir/pg_hba.conf] to [$staged_data_dir/pg_hba.conf]"
+      return 1
+    fi
     up_log "Copied [$old_data_dir/pg_hba.conf] to [$staged_data_dir/pg_hba.conf]"
   fi
 
@@ -549,17 +558,37 @@ perform_upgrade() {
     return 1
   fi
 
-  archive_old_clusters "$new_version"
-
   up_log "Upgrade process complete"
   up_log "New data location at [$new_data_dir]"
-  up_log "The old cluster is kept unchanged at [$old_data_dir.bak]"
-  up_log "      To roll back, delete [$new_data_dir] and rename [$old_data_dir.bak] back to [$old_data_dir]."
+
+  local old_backup_dir
+  if old_backup_dir=$(archive_cluster "$old_data_dir"); then
+    up_log "The old cluster is kept unchanged at [$old_backup_dir]"
+    up_log "      To roll back, delete [$new_data_dir] and rename [$old_backup_dir] back to [$old_data_dir]."
+  else
+    up_log "WARNING: Failed to archive the old cluster, it is kept unchanged at [$old_data_dir]"
+    up_log "      To roll back, delete [$new_data_dir]."
+  fi
+  up_log "      It shares its blocks with the new cluster at first, but takes more space as the new one changes."
   up_log "      Once you have verified the upgrade, it can be safely deleted."
   return 0
 }
 
-# Renames every cluster older than the given version from <major>/docker to <major>/docker.bak
+# Renames a cluster directory to <dir>.bak (<dir>.bak-<timestamp> if that is taken)
+# Prints the new path
+archive_cluster() {
+  local cluster_dir="$1"
+  local backup_dir="$cluster_dir.bak"
+
+  if [ -e "$backup_dir" ]; then
+    backup_dir="$cluster_dir.bak-$(date +%Y%m%d%H%M%S)"
+  fi
+
+  mv -T "$cluster_dir" "$backup_dir" || return 1
+  echo "$backup_dir"
+}
+
+# Archives every cluster older than the given version from <major>/docker to <major>/docker.bak
 # Images that look for a cluster in /var/lib/postgresql/*/docker (immich-app/immich#33427)
 # would otherwise pick an older one. A cluster upgraded with --link (before copy mode) is unusable
 # anyway; one upgraded with --copy-file-range stays intact as the rollback.
@@ -573,12 +602,7 @@ archive_old_clusters() {
     [[ "$version" =~ ^[0-9]+$ ]] || continue
     [ "$version" -lt "$current_version" ] || continue
 
-    backup_dir="$version_dir.bak"
-    if [ -e "$backup_dir" ]; then
-      backup_dir="$version_dir.bak-$(date +%Y%m%d%H%M%S)"
-    fi
-
-    if mv -T "$version_dir" "$backup_dir"; then
+    if backup_dir=$(archive_cluster "$version_dir"); then
       log "Archived old PostgreSQL [$version] cluster [$version_dir] -> [$backup_dir]"
     else
       log "WARNING: Failed to archive old PostgreSQL [$version] cluster [$version_dir]"
@@ -708,6 +732,9 @@ if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
   log "ERROR: Upgrade failed"
   exit 1
 fi
+
+# Any other clusters older than the one just upgraded
+archive_old_clusters "$TARGET_VERSION"
 
 log "Upgrade complete. New database available at [$BASE_DIR/$TARGET_VERSION/docker]"
 log "Done."
