@@ -36,7 +36,7 @@ RUN set -eux; \
   rm -f ./*.deb
 
 # renovate: datasource=github-releases depName=paradedb/paradedb
-ENV PARADEDB_VERSION=0.26.7
+ENV PARADEDB_VERSION=0.27.0
 
 # Install ParadeDB pg_search extension from GitHub releases
 RUN set -eux; \
