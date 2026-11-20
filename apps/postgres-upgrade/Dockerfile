@@ -27,15 +27,15 @@ RUN apt-get install -y --no-install-recommends \
 
 WORKDIR /tmp
 
-# renovate: datasource=github-releases depName=tensorchord/VectorChord
+# renovate: datasource=github-releases depName=supervc-stack/VectorChord
 ENV VCHORD_VERSION=1.1.1
 
 # Install VectorChord from GitHub releases
 # TODO: Add PostgreSQL 19 once VectorChord publishes postgresql-19-vchord
 RUN set -eux; \
   ARCH=$(dpkg --print-architecture) && \
-  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
-  wget -q "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/supervc-stack/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
+  wget -q "https://github.com/supervc-stack/VectorChord/releases/download/${VCHORD_VERSION}/postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
   apt-get install -y --no-install-recommends \
   "./postgresql-17-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" \
   "./postgresql-18-vchord_${VCHORD_VERSION}-1_${ARCH}.deb" && \
