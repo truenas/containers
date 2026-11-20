@@ -315,25 +315,72 @@ perform_upgrade() {
   empty_line
 
   local new_data_dir="$BASE_DIR/$new_version/docker"
+  # The new cluster is built here and only renamed to [$new_data_dir] once everything succeeded.
+  # An interrupted run (container killed, OOM, reboot) can never leave a half-built cluster
+  # at [$new_data_dir], which the next run would take as a completed upgrade.
+  local staged_data_dir="$new_data_dir.tmp"
 
   if [ -d "$new_data_dir" ]; then
     up_log "ERROR: Directory [$new_data_dir] already exists."
     return 1
   fi
 
+  if [ -e "$staged_data_dir" ]; then
+    up_log "Removing leftover staging directory [$staged_data_dir] from an interrupted upgrade"
+    if ! rm -rf "${staged_data_dir:?}"; then
+      up_log "ERROR: Failed to remove leftover staging directory [$staged_data_dir]"
+      return 1
+    fi
+  fi
+
+  # Left behind when the container was killed. Nothing can be running here (the
+  # database container waits for this one), and pg_upgrade refuses to run while it exists.
+  if [ -f "$old_data_dir/postmaster.pid" ]; then
+    up_log "Removing stale [$old_data_dir/postmaster.pid]"
+    rm -f "$old_data_dir/postmaster.pid"
+  fi
+
+  # pg_upgrade refuses a cluster that was not shut down cleanly (e.g. the container was killed).
+  # Starting it once with its own binaries runs crash recovery, stopping it leaves it clean.
+  local cluster_state
+  cluster_state=$(LC_ALL=C "$old_bin_path"/pg_controldata --pgdata="$old_data_dir" | sed -n 's/^Database cluster state: *//p')
+  if [ "$cluster_state" != "shut down" ]; then
+    up_log "Old cluster was not shut down cleanly (state: [$cluster_state]), running crash recovery"
+    local recovery_log="/tmp/old-cluster-recovery.log"
+    if ! "$old_bin_path"/pg_ctl --pgdata="$old_data_dir" --wait --timeout=3600 --log="$recovery_log" \
+      -o "-c listen_addresses='' -k /var/run/postgresql" start; then
+      up_log "ERROR: Old cluster failed to start for crash recovery"
+      cat "$recovery_log" >&2 || true
+      return 1
+    fi
+    if ! "$old_bin_path"/pg_ctl --pgdata="$old_data_dir" --wait --timeout=3600 --mode=fast stop; then
+      up_log "ERROR: Old cluster failed to stop after crash recovery"
+      return 1
+    fi
+    up_log "Crash recovery complete"
+  fi
+
   # Initialize new data directory
-  up_log "Initializing new data directory: $new_data_dir"
-  if ! mkdir -p "$new_data_dir" ; then
-    up_log "ERROR: Failed to create new data directory [$new_data_dir]"
+  up_log "Initializing new data directory: $staged_data_dir"
+  if ! mkdir -p "$staged_data_dir" ; then
+    up_log "ERROR: Failed to create new data directory [$staged_data_dir]"
     return 1
   fi
 
   export PGUSER="$POSTGRES_USER"
-  export PGDATA="$new_data_dir"
+  export PGDATA="$staged_data_dir"
 
-  # Check if old cluster has checksums enabled
+  # pg_upgrade requires the new cluster's checksum setting to match the old one.
+  # pg_controldata reads it from the control file, without scanning the data files.
+  local checksum_version
+  checksum_version=$(LC_ALL=C "$old_bin_path"/pg_controldata --pgdata="$old_data_dir" | sed -n 's/^Data page checksum version: *//p')
+  if [ -z "$checksum_version" ]; then
+    up_log "ERROR: Could not read the checksum setting of the old cluster [$old_data_dir]"
+    return 1
+  fi
+
   local old_checksums_enabled=false
-  if "$old_bin_path"/pg_checksums --check --pgdata="$old_data_dir" >/dev/null 2>&1; then
+  if [ "$checksum_version" != "0" ]; then
     old_checksums_enabled=true
     up_log "Old cluster has checksums enabled"
   else
@@ -363,45 +410,33 @@ perform_upgrade() {
   local original_path="$PATH"
   export PATH="$new_bin_path:$PATH"
   up_log "Using initdb from [$(which initdb)]"
-  docker_init_database_dir
+  # pg_upgrade syncs the new cluster itself
+  docker_init_database_dir --no-sync
   export PATH="$original_path"
   empty_line
 
   # Restore original POSTGRES_INITDB_ARGS
   export POSTGRES_INITDB_ARGS="$original_initdb_args"
 
-  # Create backup before upgrade
-  local timestamp
-  timestamp=$(date +%Y%m%d%H%M%S)
-  local backup_dir="$BASE_DIR/backups"
-  if ! mkdir -p "$backup_dir"; then
-    up_log "ERROR: Failed to create backup directory [$backup_dir]"
+  # docker_init_database_dir returns 0 even when initdb fails, and initdb removes what it created
+  if [ ! -f "$staged_data_dir/PG_VERSION" ]; then
+    up_log "ERROR: Failed to initialize the new cluster at [$staged_data_dir]"
     return 1
   fi
 
-  local backup_file="$backup_dir/pre-upgrade-${old_version}-to-${new_version}-${timestamp}.tar.zst"
-  local backup_data_size
-  backup_data_size=$(get_data_size "$old_data_dir")
-  up_log "Creating backup: $backup_file (${backup_data_size})"
-  up_log "This may take a while depending on database size..."
-  tar --zstd -cf "$backup_file" -C "$(dirname "$old_data_dir")" "$(basename "$old_data_dir")"
-
-  # Try to set restrictive permissions on backup to protect sensitive data
-  if chmod 600 "$backup_file"; then
-    up_log "Backup secured with 600 permissions"
-  else
-    up_log "WARNING: Failed to set permissions on backup file [$backup_file]"
-  fi
-
   # Build base pg_upgrade command (shared by check and actual upgrade)
+  # --copy-file-range leaves the old cluster untouched, so it stays usable as the rollback,
+  # and a failed or interrupted upgrade can simply be retried from it.
+  # On ZFS with block cloning the copy shares blocks with the old cluster, so it takes
+  # neither the time nor the space of a full copy.
   local pg_upgrade_base_cmd=(
     "$new_bin_path"/pg_upgrade
     --old-bindir="$old_bin_path"
     --new-bindir="$new_bin_path"
     --old-datadir="$old_data_dir"
-    --new-datadir="$new_data_dir"
+    --new-datadir="$staged_data_dir"
     --socketdir=/var/run/postgresql
-    --link
+    --copy-file-range
   )
 
   # Compatibility check - run once to detect loadable libraries
@@ -414,7 +449,7 @@ perform_upgrade() {
 
     # Try to detect preload libraries and retry
     local libs_to_preload
-    if libs_to_preload=$(detect_preload_libraries "$new_data_dir"); then
+    if libs_to_preload=$(detect_preload_libraries "$staged_data_dir"); then
       up_log "Retrying compatibility check with shared_preload_libraries options..."
       pg_upgrade_opts="-c shared_preload_libraries='$libs_to_preload'"
 
@@ -428,7 +463,7 @@ perform_upgrade() {
   # Handle final check result
   if [ "$check_failed" = true ]; then
     up_log "ERROR: Compatibility check failed"
-    local output_dir="$new_data_dir/pg_upgrade_output.d"
+    local output_dir="$staged_data_dir/pg_upgrade_output.d"
     up_log "Compatibility check output (RAW OUTPUT):"
     up_log "------------------------------------------"
     if compgen -G "$output_dir"/* > /dev/null; then
@@ -439,9 +474,9 @@ perform_upgrade() {
       up_log "No compatibility check output files found in [$output_dir]"
     fi
     up_log "------------------------------------------"
-    up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
-    if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
-      up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed compatibility check"
+    up_log "Cleaning up staging directory [$staged_data_dir]"
+    if ! rm -rf "${staged_data_dir:?}"; then
+      up_log "WARNING: Failed to remove staging directory [$staged_data_dir] after failed compatibility check"
     fi
     return 1
   fi
@@ -449,8 +484,9 @@ perform_upgrade() {
   up_log "Compatibility check passed"
 
   # Create and change to a dedicated directory for pg_upgrade output files
+  # Cleared first, so SQL scripts from an interrupted run are not picked up
   local upgrade_work_dir="$BASE_DIR/pg_upgrade_work"
-  if ! mkdir -p "$upgrade_work_dir"; then
+  if ! rm -rf "${upgrade_work_dir:?}" || ! mkdir -p "$upgrade_work_dir"; then
     up_log "ERROR: Failed to create pg_upgrade work directory [$upgrade_work_dir]"
     return 1
   fi
@@ -472,9 +508,9 @@ perform_upgrade() {
 
   if ! "${upgrade_cmd[@]}"; then
     up_log "ERROR: Upgrade failed"
-    up_log "Cleaning up new version directory [$BASE_DIR/$new_version]"
-    if ! rm -rf "${BASE_DIR:?}/${new_version:?}"; then
-      up_log "WARNING: Failed to remove new version directory [$BASE_DIR/$new_version] after failed upgrade"
+    up_log "Cleaning up staging directory [$staged_data_dir]"
+    if ! rm -rf "${staged_data_dir:?}"; then
+      up_log "WARNING: Failed to remove staging directory [$staged_data_dir] after failed upgrade"
     fi
     return 1
   fi
@@ -486,15 +522,27 @@ perform_upgrade() {
   sql_files=$(find . -maxdepth 1 -name "*.sql" -type f 2>/dev/null || true)
 
   # Run post-upgrade SQL scripts if any were generated
-  if ! run_post_upgrade_tasks "$new_data_dir" "$new_bin_path" "$sql_files"; then
+  if ! run_post_upgrade_tasks "$staged_data_dir" "$new_bin_path" "$sql_files"; then
     up_log "ERROR: Post-upgrade tasks failed"
     return 1
   fi
 
   # Copy pg_hba.conf (authentication rules - safe to copy between versions)
+  # After the transfer, so the old rules cannot lock pg_upgrade out of the new cluster
   if [ -f "$old_data_dir/pg_hba.conf" ]; then
-    cp "$old_data_dir/pg_hba.conf" "$new_data_dir/pg_hba.conf"
-    up_log "Copied [$old_data_dir/pg_hba.conf] to [$new_data_dir/pg_hba.conf]"
+    if ! cp "$old_data_dir/pg_hba.conf" "$staged_data_dir/pg_hba.conf"; then
+      up_log "ERROR: Failed to copy [$old_data_dir/pg_hba.conf] to [$staged_data_dir/pg_hba.conf]"
+      return 1
+    fi
+    up_log "Copied [$old_data_dir/pg_hba.conf] to [$staged_data_dir/pg_hba.conf]"
+  fi
+
+  # TODO: Remove once postgres 17 is removed from Apps
+  # Migrate timezones in the new database directory
+  # initdb used the TZ to set the timezone of the new DB
+  if ! migrate_timezones "$staged_data_dir"; then
+    up_log "ERROR: Timezone migration failed"
+    return 1
   fi
 
   # Note: postgresql.conf is NOT copied automatically as it may contain
@@ -504,13 +552,62 @@ perform_upgrade() {
     up_log "      Review and merge settings manually if needed. (Only if you made custom changes)"
   fi
 
+  up_log "Committing the new cluster [$staged_data_dir] -> [$new_data_dir]"
+  if ! mv -T "$staged_data_dir" "$new_data_dir"; then
+    up_log "ERROR: Failed to move [$staged_data_dir] to [$new_data_dir]"
+    return 1
+  fi
+
   up_log "Upgrade process complete"
   up_log "New data location at [$new_data_dir]"
-  up_log "Old data directory at [$old_data_dir] is no longer usable (upgraded with --link, data files are shared with the new version)"
-  up_log "      It can be safely deleted, this will not affect the new data directory."
-  up_log "Backup available at [$backup_file]"
-  up_log "      To roll back, restore this backup. Keep it until you have verified the upgrade."
+
+  local old_backup_dir
+  if old_backup_dir=$(archive_cluster "$old_data_dir"); then
+    up_log "The old cluster is kept unchanged at [$old_backup_dir]"
+    up_log "      To roll back, delete [$new_data_dir] and rename [$old_backup_dir] back to [$old_data_dir]."
+  else
+    up_log "WARNING: Failed to archive the old cluster, it is kept unchanged at [$old_data_dir]"
+    up_log "      To roll back, delete [$new_data_dir]."
+  fi
+  up_log "      It shares its blocks with the new cluster at first, but takes more space as the new one changes."
+  up_log "      Once you have verified the upgrade, it can be safely deleted."
   return 0
+}
+
+# Renames a cluster directory to <dir>.bak (<dir>.bak-<timestamp> if that is taken)
+# Prints the new path
+archive_cluster() {
+  local cluster_dir="$1"
+  local backup_dir="$cluster_dir.bak"
+
+  if [ -e "$backup_dir" ]; then
+    backup_dir="$cluster_dir.bak-$(date +%Y%m%d%H%M%S)"
+  fi
+
+  mv -T "$cluster_dir" "$backup_dir" || return 1
+  echo "$backup_dir"
+}
+
+# Archives every cluster older than the given version from <major>/docker to <major>/docker.bak
+# Images that look for a cluster in /var/lib/postgresql/*/docker (immich-app/immich#33427)
+# would otherwise pick an older one. A cluster upgraded with --link (before copy mode) is unusable
+# anyway; one upgraded with --copy-file-range stays intact as the rollback.
+archive_old_clusters() {
+  local current_version="$1"
+  local version_dir version backup_dir
+
+  for version_dir in "$BASE_DIR"/*/docker; do
+    [ -f "$version_dir/PG_VERSION" ] || continue
+    version=$(cat "$version_dir/PG_VERSION")
+    [[ "$version" =~ ^[0-9]+$ ]] || continue
+    [ "$version" -lt "$current_version" ] || continue
+
+    if backup_dir=$(archive_cluster "$version_dir"); then
+      log "Archived old PostgreSQL [$version] cluster [$version_dir] -> [$backup_dir]"
+    else
+      log "WARNING: Failed to archive old PostgreSQL [$version] cluster [$version_dir]"
+    fi
+  done
 }
 
 log "Starting entrypoint with migration and upgrade handling"
@@ -547,6 +644,8 @@ if [ -d "$target_version_dir" ] && [ "$(ls -A "$target_version_dir" 2>/dev/null)
   fi
 
   log "Target version directory already exists with correct version [$TARGET_VERSION]. Upgrade already completed."
+  # Installs upgraded before old clusters were archived still have them next to the current one
+  archive_old_clusters "$TARGET_VERSION"
   log "Exiting successfully."
   exit 0
 fi
@@ -634,14 +733,8 @@ if ! perform_upgrade "$DATA_DIR" "$OLD_VERSION" "$TARGET_VERSION"; then
   exit 1
 fi
 
-# TODO: Remove once postgres 17 is removed from Apps
-# Migrate timezones in the new database directory after upgrade
-# We do this once more, as the perform_upgrade initializes a new DB,
-# which will use the TZ to set the timezone of the new DB
-if ! migrate_timezones "$BASE_DIR/$TARGET_VERSION/docker"; then
-  log "ERROR: Timezone migration failed"
-  exit 1
-fi
+# Any other clusters older than the one just upgraded
+archive_old_clusters "$TARGET_VERSION"
 
 log "Upgrade complete. New database available at [$BASE_DIR/$TARGET_VERSION/docker]"
 log "Done."
