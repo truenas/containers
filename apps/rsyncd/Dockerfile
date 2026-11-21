@@ -4,7 +4,7 @@ LABEL maintainer="TrueNAS Engineering <dev@truenas.com>"
 LABEL description="rsynd on debian trixie"
 
 RUN apt update && \
-    apt install -y rsync=3.5.0+ds1-0+deb13u1 procps && \
+    apt install -y rsync=3.5.0+ds1-0+deb13u2 procps && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
