@@ -42,7 +42,7 @@ RUN set -eux; \
   rm -f ./*.deb
 
 # renovate: datasource=github-releases depName=paradedb/paradedb
-ENV PARADEDB_VERSION=0.27.0
+ENV PARADEDB_VERSION=0.27.1
 
 # Install ParadeDB pg_search extension from GitHub releases
 # TODO: Add PostgreSQL 19 once ParadeDB publishes postgresql-19-pg-search
